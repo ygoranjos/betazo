@@ -21,6 +21,9 @@
     "noImplicitAny": true,
     "strictBindCallApply": true,
     "noFallthroughCasesInSwitch": true,
-    "paths": {}
+    "paths": {
+      "@betazo/database": ["libs/database/src/index.ts"],
+      "@betazo/database/*": ["libs/database/src/*"]
+    }
   }
 }
