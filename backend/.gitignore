@@ -1,0 +1,24 @@
+# compiled output
+dist/
+build/
+
+# node dependencies
+node_modules/
+
+# environment
+.env
+.env.*
+!.env.example
+
+# logs
+logs/
+*.log
+
+# coverage
+coverage/
+
+# typescript cache
+*.tsbuildinfo
+
+# claude context
+CLAUDE.md
