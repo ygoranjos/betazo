@@ -34,6 +34,7 @@ services:
       POOL_MODE: transaction        # Modo transaction: libera conexão após cada query
       MAX_CLIENT_CONN: 1000         # Máximo de clientes simultâneos (NestJS instances)
       DEFAULT_POOL_SIZE: 20         # Conexões reais abertas com o PostgreSQL
+      AUTH_TYPE: plain               # PgBouncer verifica senha em texto puro do cliente
     depends_on:
       postgres:
         condition: service_healthy
