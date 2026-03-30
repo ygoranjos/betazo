@@ -29,6 +29,15 @@
         "tsConfigPath": "apps/auth-service/tsconfig.app.json"
       }
     },
+    "live-odds-service": {
+      "type": "application",
+      "root": "apps/live-odds-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/live-odds-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/live-odds-service/tsconfig.app.json"
+      }
+    },
     "database": {
       "type": "library",
       "root": "libs/database",
