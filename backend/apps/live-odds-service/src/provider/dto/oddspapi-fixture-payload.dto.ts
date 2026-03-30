@@ -1,5 +1,3 @@
-// ─── Shared ───────────────────────────────────────────────────────────────────
-
 export interface OddspapiParticipant {
   id: number;
   name: string;
@@ -9,7 +7,7 @@ export interface OddspapiParticipant {
 
 export interface OddspapiFixtureStatus {
   live: boolean;
-  statusId: number; // 0=pending 1=live 2=finished 3=cancelled
+  statusId: number;
   statusName?: string;
 }
 
@@ -24,21 +22,17 @@ export interface OddspapiTournament {
   category?: string;
 }
 
-// ─── WebSocket channel "fixtures" (delta — todos os campos opcionais exceto fixtureId) ─
-
 export interface OddspapiFixturePayload {
   fixtureId: string;
   status?: OddspapiFixtureStatus;
   participants?: {
-    participant1?: OddspapiParticipant; // time da casa
-    participant2?: OddspapiParticipant; // time visitante
+    participant1?: OddspapiParticipant;
+    participant2?: OddspapiParticipant;
   };
   sport?: OddspapiSport;
   tournament?: OddspapiTournament;
-  startTime?: number; // epoch em milissegundos
+  startTime?: number;
 }
-
-// ─── REST GET /fixtures (estrutura flat, campos com Id no nome) ───────────────
 
 export interface OddspapiRestFixture {
   fixtureId: string;
@@ -48,8 +42,8 @@ export interface OddspapiRestFixture {
   participant2Name?: string;
   sportId?: number;
   tournamentId?: number;
-  statusId?: number; // 0=pending 1=live 2=finished 3=cancelled
-  startTime?: number; // epoch em milissegundos
+  statusId?: number;
+  startTime?: number;
   updatedAt?: string;
 }
 

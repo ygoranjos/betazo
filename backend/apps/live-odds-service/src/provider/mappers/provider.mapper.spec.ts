@@ -1,14 +1,15 @@
 import { ProviderMapper } from './provider.mapper';
-import type { OddspapiFixturePayload, OddspapiRestFixture } from '../dto/oddspapi-fixture-payload.dto';
+import type {
+  OddspapiFixturePayload,
+  OddspapiRestFixture,
+} from '../dto/oddspapi-fixture-payload.dto';
 import type { OddspapiOddsPayload } from '../dto/oddspapi-odds-payload.dto';
 import type { Match } from '../interfaces/match.interface';
-
-// ─── Factories ───────────────────────────────────────────────────────────────
 
 const makeFixture = (overrides: Partial<OddspapiFixturePayload> = {}): OddspapiFixturePayload => ({
   fixtureId: 'ext-001',
   status: { live: false, statusId: 0 },
-  startTime: 1743278400000, // 2025-03-29T20:00:00Z em epoch ms
+  startTime: 1743278400000,
   participants: {
     participant1: { id: 1, name: 'Manchester City' },
     participant2: { id: 2, name: 'Arsenal' },
@@ -39,19 +40,37 @@ const makeOddsPayload = (overrides: Partial<OddspapiOddsPayload> = {}): Oddspapi
             '101': {
               outcomeId: 101,
               players: {
-                '0': { playerId: '0', price: 2.1, active: true, marketActive: true, oddsId: 'ext-001:bet365:101:0' },
+                '0': {
+                  playerId: '0',
+                  price: 2.1,
+                  active: true,
+                  marketActive: true,
+                  oddsId: 'ext-001:bet365:101:0',
+                },
               },
             },
             '102': {
               outcomeId: 102,
               players: {
-                '0': { playerId: '0', price: 3.4, active: true, marketActive: true, oddsId: 'ext-001:bet365:102:0' },
+                '0': {
+                  playerId: '0',
+                  price: 3.4,
+                  active: true,
+                  marketActive: true,
+                  oddsId: 'ext-001:bet365:102:0',
+                },
               },
             },
             '103': {
               outcomeId: 103,
               players: {
-                '0': { playerId: '0', price: 3.2, active: true, marketActive: true, oddsId: 'ext-001:bet365:103:0' },
+                '0': {
+                  playerId: '0',
+                  price: 3.2,
+                  active: true,
+                  marketActive: true,
+                  oddsId: 'ext-001:bet365:103:0',
+                },
               },
             },
           },
@@ -84,8 +103,6 @@ const baseMatch: Match = {
     },
   ],
 };
-
-// ─── Testes ──────────────────────────────────────────────────────────────────
 
 describe('ProviderMapper', () => {
   describe('generateInternalId', () => {
@@ -206,9 +223,7 @@ describe('ProviderMapper', () => {
     });
 
     it('deve mapear status live quando status.live=true', () => {
-      const match = ProviderMapper.mapFixture(
-        makeFixture({ status: { live: true, statusId: 1 } }),
-      );
+      const match = ProviderMapper.mapFixture(makeFixture({ status: { live: true, statusId: 1 } }));
       expect(match.status).toBe('live');
     });
 
@@ -261,7 +276,7 @@ describe('ProviderMapper', () => {
       };
       const atualizado = ProviderMapper.applyFixtureDelta(baseMatch, delta);
       expect(atualizado.homeTeam).toBe('Man City Atualizado');
-      expect(atualizado.awayTeam).toBe('Arsenal'); // inalterado
+      expect(atualizado.awayTeam).toBe('Arsenal');
     });
 
     it('não deve mutar o match original', () => {
@@ -270,7 +285,7 @@ describe('ProviderMapper', () => {
         status: { live: false, statusId: 2 },
       };
       ProviderMapper.applyFixtureDelta(baseMatch, delta);
-      expect(baseMatch.status).toBe('live'); // original inalterado
+      expect(baseMatch.status).toBe('live');
     });
   });
 
@@ -332,9 +347,9 @@ describe('ProviderMapper', () => {
       });
 
       const atualizado = ProviderMapper.applyOddsUpdate(baseMatch, payload);
-      // outcomes inativos → mercado ignorado → h2h original preservado
+
       const h2h = atualizado.markets.find((m) => m.id === 'h2h');
-      expect(h2h?.outcomes[0].price).toBe(2.0); // preço original preservado
+      expect(h2h?.outcomes[0].price).toBe(2.0);
     });
 
     it('não deve mutar o match original', () => {

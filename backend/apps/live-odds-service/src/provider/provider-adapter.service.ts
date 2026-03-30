@@ -75,8 +75,6 @@ export class ProviderAdapterService implements OnModuleInit, OnModuleDestroy {
     this.cleanup();
   }
 
-  // ─── Public API ───────────────────────────────────────────────────────────
-
   getMatches(): Match[] {
     return Array.from(this.matches.values());
   }
@@ -93,8 +91,6 @@ export class ProviderAdapterService implements OnModuleInit, OnModuleDestroy {
       lastMessageAt: this.lastMessageAt?.toISOString() ?? null,
     };
   }
-
-  // ─── WebSocket connection ─────────────────────────────────────────────────
 
   private connect(): void {
     this.status = 'reconnecting';
@@ -217,7 +213,9 @@ export class ProviderAdapterService implements OnModuleInit, OnModuleDestroy {
     this.status = 'disconnected';
     this.stopHeartbeat();
     const reasonStr = reason.length > 0 ? reason.toString() : '(no reason)';
-    this.logger.warn(`WebSocket closed [${code.toString()}] ${reasonStr} — attempt #${(this.reconnectAttempts + 1).toString()}`);
+    this.logger.warn(
+      `WebSocket closed [${code.toString()}] ${reasonStr} — attempt #${(this.reconnectAttempts + 1).toString()}`,
+    );
 
     if (this.reconnectAttempts >= FALLBACK_TRIGGER_ATTEMPTS && this.mode !== 'polling_fallback') {
       this.logger.warn('Switching to polling fallback mode');
@@ -234,8 +232,6 @@ export class ProviderAdapterService implements OnModuleInit, OnModuleDestroy {
     this.reconnectAttempts++;
     this.reconnectTimer = setTimeout(() => this.connect(), base + jitter);
   }
-
-  // ─── Heartbeat ────────────────────────────────────────────────────────────
 
   private startHeartbeat(): void {
     this.stopHeartbeat();
@@ -261,15 +257,12 @@ export class ProviderAdapterService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  // Chamado pelo evento 'pong' do WebSocket (protocol-level)
   private handlePong(): void {
     if (this.heartbeatTimeout) {
       clearTimeout(this.heartbeatTimeout);
       this.heartbeatTimeout = null;
     }
   }
-
-  // ─── REST snapshot + polling fallback ────────────────────────────────────
 
   private async fetchSnapshot(): Promise<void> {
     this.logger.log('Fetching initial snapshot via REST');
@@ -339,8 +332,6 @@ export class ProviderAdapterService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  // ─── Cleanup ──────────────────────────────────────────────────────────────
-
   private cleanup(): void {
     this.stopHeartbeat();
     this.stopPolling();
@@ -353,5 +344,4 @@ export class ProviderAdapterService implements OnModuleInit, OnModuleDestroy {
   }
 }
 
-// Keep TTL constant visible for future Redis integration
 export { RAW_DATA_TTL_MS };

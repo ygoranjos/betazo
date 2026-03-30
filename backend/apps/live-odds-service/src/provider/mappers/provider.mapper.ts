@@ -10,8 +10,6 @@ import type {
   OddspapiOddsPayload,
 } from '../dto/oddspapi-odds-payload.dto';
 
-// ─── Mapeamento de marketId numérico → id interno ────────────────────────────
-// marketId 101 = 1X2 / Match Winner (confirmado pela documentação real da OddsPapi)
 const MARKET_ID_MAP: Record<number, string> = {
   101: 'h2h',
 };
@@ -26,14 +24,12 @@ const MARKET_NAME_MAP: Record<string, string> = {
   props: 'Props',
 };
 
-// outcomeIds dentro do mercado h2h (marketId 101)
 const H2H_OUTCOME_NAMES: Record<number, string> = {
   101: 'Casa',
   102: 'Empate',
   103: 'Fora',
 };
 
-// statusId da API → MatchStatus interno (0=pending, 1=live, 2=finished, 3=cancelled)
 const STATUS_MAP: Record<number, MatchStatus> = {
   0: 'pre_match',
   1: 'live',
@@ -42,8 +38,6 @@ const STATUS_MAP: Record<number, MatchStatus> = {
 };
 
 export class ProviderMapper {
-  // ─── Utilitários ───────────────────────────────────────────────────────────
-
   static generateInternalId(externalId: string): string {
     return createHash('sha256').update(externalId).digest('hex').slice(0, 36);
   }
@@ -53,7 +47,6 @@ export class ProviderMapper {
     return STATUS_MAP[statusId] ?? 'pre_match';
   }
 
-  // status.live = true tem precedência sobre statusId
   static mapFixtureStatus(statusId: number | undefined, isLive: boolean | undefined): MatchStatus {
     if (isLive === true) return 'live';
     return ProviderMapper.mapStatusId(statusId);
@@ -72,8 +65,6 @@ export class ProviderMapper {
     return new Date(epoch).toISOString();
   }
 
-  // ─── Fixture do canal WebSocket → Match ────────────────────────────────────
-
   static mapFixture(raw: OddspapiFixturePayload): Match {
     return {
       id: ProviderMapper.generateInternalId(raw.fixtureId),
@@ -88,8 +79,6 @@ export class ProviderMapper {
     };
   }
 
-  // ─── Fixture da REST API → Match ───────────────────────────────────────────
-
   static mapRestFixture(raw: OddspapiRestFixture): Match {
     return {
       id: ProviderMapper.generateInternalId(raw.fixtureId),
@@ -103,8 +92,6 @@ export class ProviderMapper {
       markets: [],
     };
   }
-
-  // ─── Delta do canal "fixtures" aplicado a um Match existente ───────────────
 
   static applyFixtureDelta(match: Match, raw: OddspapiFixturePayload): Match {
     const updated: Match = { ...match };
@@ -127,13 +114,6 @@ export class ProviderMapper {
 
     return updated;
   }
-
-  // ─── Odds do canal "odds" → atualização de mercados no Match ───────────────
-  //
-  // O payload traz bookmakerOdds com todos os bookmakers que mudaram.
-  // Aqui usamos o primeiro bookmaker ativo disponível para cada mercado.
-  // A seleção por regra de bookmaker configurável será aplicada
-  // na camada Redis/pipeline — fora do escopo deste adapter.
 
   static applyOddsUpdate(match: Match, payload: OddspapiOddsPayload): Match {
     const incoming = ProviderMapper.extractMarkets(payload, match);

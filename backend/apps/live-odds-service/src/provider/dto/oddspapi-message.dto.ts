@@ -22,7 +22,6 @@ export interface OddspapiControlMessage {
   lastSeenId?: string;
 }
 
-// Mensagem enviada ao conectar para autenticar e subscrever canais
 export interface OddspapiSubscribeMessage {
   type: 'login';
   apiKey: string;

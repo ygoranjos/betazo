@@ -4,8 +4,6 @@ import { ProviderAdapterService } from './provider-adapter.service';
 describe('ProviderAdapterService', () => {
   let service: ProviderAdapterService;
 
-  // Helper para chamar métodos privados do serviço
-
   const call = (svc: ProviderAdapterService, method: string, ...args: unknown[]) =>
     (svc as unknown as Record<string, (...a: unknown[]) => unknown>)[method](...args);
 
@@ -14,15 +12,12 @@ describe('ProviderAdapterService', () => {
       providers: [ProviderAdapterService],
     }).compile();
 
-    // ODDSPAPI_API_KEY não definido em ambiente de teste → onModuleInit não conecta
     service = module.get(ProviderAdapterService);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
-
-  // ─── API pública ────────────────────────────────────────────────────────────
 
   describe('getMatches', () => {
     it('deve retornar um array vazio quando nenhum match está carregado', () => {
@@ -49,8 +44,6 @@ describe('ProviderAdapterService', () => {
       expect(service.getConnectionStatus().mode).toBe('websocket');
     });
   });
-
-  // ─── Gerenciamento de estado interno ────────────────────────────────────────
 
   describe('handleFixtureUpdate', () => {
     it('deve armazenar um novo match a partir do payload de fixture', () => {
@@ -84,7 +77,6 @@ describe('ProviderAdapterService', () => {
         },
       });
 
-      // Delta: apenas o status muda
       call(service, 'handleFixtureUpdate', {
         fixtureId: 'ext-002',
         status: { live: true, statusId: 1 },
@@ -104,7 +96,6 @@ describe('ProviderAdapterService', () => {
         tournament: { id: 10, name: 'Liga X' },
       });
 
-      // Delta: apenas participant2 muda
       call(service, 'handleFixtureUpdate', {
         fixtureId: 'ext-003',
         participants: {
@@ -113,9 +104,9 @@ describe('ProviderAdapterService', () => {
       });
 
       const match = service.getMatch('ext-003');
-      expect(match?.homeTeam).toBe('Time A'); // inalterado
+      expect(match?.homeTeam).toBe('Time A');
       expect(match?.awayTeam).toBe('Time B Atualizado');
-      expect(match?.competition).toBe('Liga X'); // inalterado
+      expect(match?.competition).toBe('Liga X');
     });
 
     it('deve ignorar fixture update sem fixtureId', () => {

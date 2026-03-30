@@ -1,17 +1,3 @@
-// ─── Estrutura real do canal "odds" da OddsPapi ───────────────────────────────
-//
-// Hierarquia:
-//   bookmakerOdds
-//     → [bookmaker slug]
-//       → markets
-//         → [marketId numérico como string]
-//           → outcomes
-//             → [outcomeId numérico como string]
-//               → players
-//                 → "0"  (playerId "0" = odd base; outros IDs = players nomeados)
-//
-// Todos os campos são delta — apenas o que mudou é enviado.
-
 export interface OddspapiOddsPlayer {
   price: number;
   priceFractional?: string;
@@ -22,26 +8,26 @@ export interface OddspapiOddsPlayer {
   playerName?: string;
   bookmakerOutcomeId?: string;
   changedAt?: number;
-  oddsId?: string; // formato: "fixtureId:bookmaker:outcomeId:playerId"
+  oddsId?: string;
 }
 
 export interface OddspapiOddsOutcome {
   outcomeId: number;
-  players: Record<string, OddspapiOddsPlayer>; // key = playerId ("0" = base)
+  players: Record<string, OddspapiOddsPlayer>;
 }
 
 export interface OddspapiOddsMarket {
   marketId: number;
-  outcomes: Record<string, OddspapiOddsOutcome>; // key = outcomeId como string
+  outcomes: Record<string, OddspapiOddsOutcome>;
 }
 
 export interface OddspapiBookmakerOdds {
   bookmaker: string;
   bookmakerFixtureId?: string;
-  markets: Record<string, OddspapiOddsMarket>; // key = marketId como string
+  markets: Record<string, OddspapiOddsMarket>;
 }
 
 export interface OddspapiOddsPayload {
   fixtureId: string;
-  bookmakerOdds: Record<string, OddspapiBookmakerOdds>; // key = bookmaker slug
+  bookmakerOdds: Record<string, OddspapiBookmakerOdds>;
 }
