@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
-import type { Match, Market, Outcome } from '../interfaces/match.interface';
+import type { Match, Market, MatchStatus, Outcome } from '../interfaces/match.interface';
 import type { OddsApiV3Message, OddsApiV3OddsEntry } from '../dto/oddsapi-v3-message.dto';
+import type { OddsApiV3SimpleEvent, OddsApiV3EventOdds } from '../dto/oddsapi-v3-rest.dto';
 
 const MARKET_NAME_MAP: Record<string, string> = {
   h2h: 'Resultado Final',
@@ -10,6 +11,17 @@ const MARKET_NAME_MAP: Record<string, string> = {
   corners: 'Escanteios',
   cards: 'Cartões',
   props: 'Props',
+};
+
+const REST_STATUS_MAP: Record<string, MatchStatus> = {
+  live: 'live',
+  inprogress: 'live',
+  finished: 'settled',
+  completed: 'settled',
+  suspended: 'suspended',
+  pending: 'pre_match',
+  prematch: 'pre_match',
+  upcoming: 'pre_match',
 };
 
 export class ProviderMapper {
@@ -145,5 +157,44 @@ export class ProviderMapper {
     }
 
     return outcomes;
+  }
+
+  static mapRestStatus(status: string): MatchStatus {
+    return REST_STATUS_MAP[status.toLowerCase()] ?? 'pre_match';
+  }
+
+  static mapSimpleEvent(event: OddsApiV3SimpleEvent): Match {
+    return {
+      id: ProviderMapper.generateInternalId(event.id.toString()),
+      externalId: event.id.toString(),
+      sport: event.sport?.slug ?? 'soccer',
+      competition: event.league?.name ?? 'Unknown',
+      homeTeam: event.home,
+      awayTeam: event.away,
+      startTime: event.date,
+      status: ProviderMapper.mapRestStatus(event.status),
+      markets: [],
+    };
+  }
+
+  static applyRestOddsUpdate(match: Match, eventOdds: OddsApiV3EventOdds): Match {
+    let updated: Match = {
+      ...match,
+      homeTeam: eventOdds.home,
+      awayTeam: eventOdds.away,
+      status: ProviderMapper.mapRestStatus(eventOdds.status),
+    };
+
+    for (const [bookmakerName, markets] of Object.entries(eventOdds.bookmakers)) {
+      const v3msg: OddsApiV3Message = {
+        bookie: bookmakerName,
+        id: match.externalId,
+        date: match.startTime,
+        markets,
+      };
+      updated = ProviderMapper.applyV3OddsUpdate(updated, v3msg);
+    }
+
+    return updated;
   }
 }
