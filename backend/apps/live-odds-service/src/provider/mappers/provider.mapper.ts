@@ -1,18 +1,6 @@
 import { createHash } from 'crypto';
-import type { Match, Market, MatchStatus, Outcome } from '../interfaces/match.interface';
-import type {
-  OddspapiFixturePayload,
-  OddspapiRestFixture,
-} from '../dto/oddspapi-fixture-payload.dto';
-import type {
-  OddspapiOddsMarket,
-  OddspapiOddsOutcome,
-  OddspapiOddsPayload,
-} from '../dto/oddspapi-odds-payload.dto';
-
-const MARKET_ID_MAP: Record<number, string> = {
-  101: 'h2h',
-};
+import type { Match, Market, Outcome } from '../interfaces/match.interface';
+import type { OddsApiV3Message, OddsApiV3OddsEntry } from '../dto/oddsapi-v3-message.dto';
 
 const MARKET_NAME_MAP: Record<string, string> = {
   h2h: 'Resultado Final',
@@ -24,36 +12,9 @@ const MARKET_NAME_MAP: Record<string, string> = {
   props: 'Props',
 };
 
-const H2H_OUTCOME_NAMES: Record<number, string> = {
-  101: 'Casa',
-  102: 'Empate',
-  103: 'Fora',
-};
-
-const STATUS_MAP: Record<number, MatchStatus> = {
-  0: 'pre_match',
-  1: 'live',
-  2: 'settled',
-  3: 'settled',
-};
-
 export class ProviderMapper {
   static generateInternalId(externalId: string): string {
     return createHash('sha256').update(externalId).digest('hex').slice(0, 36);
-  }
-
-  static mapStatusId(statusId: number | undefined): MatchStatus {
-    if (statusId === undefined) return 'pre_match';
-    return STATUS_MAP[statusId] ?? 'pre_match';
-  }
-
-  static mapFixtureStatus(statusId: number | undefined, isLive: boolean | undefined): MatchStatus {
-    if (isLive === true) return 'live';
-    return ProviderMapper.mapStatusId(statusId);
-  }
-
-  static mapMarketId(numericId: number): string {
-    return MARKET_ID_MAP[numericId] ?? `market_${numericId.toString()}`;
   }
 
   static mapMarketName(marketId: string): string {
@@ -65,120 +26,124 @@ export class ProviderMapper {
     return new Date(epoch).toISOString();
   }
 
-  static mapFixture(raw: OddspapiFixturePayload): Match {
+  static createV3Match(id: string, date: string | null): Match {
     return {
-      id: ProviderMapper.generateInternalId(raw.fixtureId),
-      externalId: raw.fixtureId,
-      sport: raw.sport?.name?.toLowerCase() ?? 'unknown',
-      competition: raw.tournament?.name ?? 'Unknown',
-      homeTeam: raw.participants?.participant1?.name ?? 'Unknown',
-      awayTeam: raw.participants?.participant2?.name ?? 'Unknown',
-      startTime: ProviderMapper.epochToIso(raw.startTime),
-      status: ProviderMapper.mapFixtureStatus(raw.status?.statusId, raw.status?.live),
-      markets: [],
-    };
-  }
-
-  static mapRestFixture(raw: OddspapiRestFixture): Match {
-    return {
-      id: ProviderMapper.generateInternalId(raw.fixtureId),
-      externalId: raw.fixtureId,
-      sport: 'unknown',
+      id: ProviderMapper.generateInternalId(id),
+      externalId: id,
+      sport: 'soccer',
       competition: 'Unknown',
-      homeTeam: raw.participant1Name ?? 'Unknown',
-      awayTeam: raw.participant2Name ?? 'Unknown',
-      startTime: ProviderMapper.epochToIso(raw.startTime),
-      status: ProviderMapper.mapStatusId(raw.statusId),
+      homeTeam: 'Unknown',
+      awayTeam: 'Unknown',
+      startTime: date ?? new Date().toISOString(),
+      status: 'pre_match',
       markets: [],
     };
   }
 
-  static applyFixtureDelta(match: Match, raw: OddspapiFixturePayload): Match {
-    const updated: Match = { ...match };
-
-    if (raw.status !== undefined) {
-      updated.status = ProviderMapper.mapFixtureStatus(raw.status.statusId, raw.status.live);
-    }
-    if (raw.participants?.participant1?.name) {
-      updated.homeTeam = raw.participants.participant1.name;
-    }
-    if (raw.participants?.participant2?.name) {
-      updated.awayTeam = raw.participants.participant2.name;
-    }
-    if (raw.tournament?.name) {
-      updated.competition = raw.tournament.name;
-    }
-    if (raw.startTime !== undefined) {
-      updated.startTime = ProviderMapper.epochToIso(raw.startTime);
-    }
-
-    return updated;
+  static mapV3MarketKey(providerName: string): string | null {
+    const name = providerName.toLowerCase();
+    if (
+      name === 'ml' ||
+      name === 'moneyline' ||
+      name.includes('3-way') ||
+      name.includes('money line')
+    )
+      return 'h2h';
+    if (name.includes('total') || name.includes('over/under')) return 'totals';
+    if (name.includes('spread') || name.includes('asian handicap') || name.includes('handicap'))
+      return 'spreads';
+    if (name.includes('btts') || name.includes('both teams to score')) return 'btts';
+    if (name.includes('corner')) return 'corners';
+    if (name.includes('card')) return 'cards';
+    return null;
   }
 
-  static applyOddsUpdate(match: Match, payload: OddspapiOddsPayload): Match {
-    const incoming = ProviderMapper.extractMarkets(payload, match);
-    if (incoming.length === 0) return match;
+  static applyV3OddsUpdate(match: Match, msg: OddsApiV3Message): Match {
+    const incoming = new Map<string, Market>();
 
-    const updatedIds = new Set(incoming.map((m) => m.id));
-    const preserved = match.markets.filter((m) => !updatedIds.has(m.id));
+    for (const rawMarket of msg.markets) {
+      const marketKey = ProviderMapper.mapV3MarketKey(rawMarket.name);
+      if (!marketKey) continue;
+      if (incoming.has(marketKey)) continue;
 
-    return { ...match, markets: [...preserved, ...incoming] };
-  }
+      const oddsEntry = rawMarket.odds[0];
+      if (!oddsEntry) continue;
 
-  private static extractMarkets(payload: OddspapiOddsPayload, match: Match): Market[] {
-    const marketMap = new Map<string, Market>();
+      const outcomes = ProviderMapper.extractV3Outcomes(marketKey, oddsEntry, match);
+      if (outcomes.length === 0) continue;
 
-    for (const bookmakerData of Object.values(payload.bookmakerOdds)) {
-      for (const [marketIdStr, marketData] of Object.entries(bookmakerData.markets)) {
-        const numericMarketId = parseInt(marketIdStr, 10);
-        const internalId = ProviderMapper.mapMarketId(numericMarketId);
-
-        if (marketMap.has(internalId)) continue;
-
-        const outcomes = ProviderMapper.extractOutcomes(numericMarketId, marketData, match);
-        if (outcomes.length === 0) continue;
-
-        marketMap.set(internalId, {
-          id: internalId,
-          name: ProviderMapper.mapMarketName(internalId),
-          outcomes,
-        });
-      }
-    }
-
-    return Array.from(marketMap.values());
-  }
-
-  private static extractOutcomes(
-    marketId: number,
-    marketData: OddspapiOddsMarket,
-    match: Match,
-  ): Outcome[] {
-    const result: Outcome[] = [];
-
-    for (const [outcomeIdStr, outcomeData] of Object.entries(marketData.outcomes)) {
-      const basePlayer = outcomeData.players['0'];
-      if (!basePlayer) continue;
-      if (basePlayer.active === false || basePlayer.marketActive === false) continue;
-
-      const numericOutcomeId = parseInt(outcomeIdStr, 10);
-
-      result.push({
-        selectionId: basePlayer.oddsId ?? `${marketId.toString()}:${outcomeIdStr}`,
-        name: ProviderMapper.resolveOutcomeName(marketId, numericOutcomeId, match),
-        price: basePlayer.price,
+      incoming.set(marketKey, {
+        id: marketKey,
+        name: ProviderMapper.mapMarketName(marketKey),
+        outcomes,
       });
     }
 
-    return result;
+    if (incoming.size === 0) return match;
+
+    const updatedIds = new Set(incoming.keys());
+    const preserved = match.markets.filter((m) => !updatedIds.has(m.id));
+
+    return { ...match, markets: [...preserved, ...Array.from(incoming.values())] };
   }
 
-  private static resolveOutcomeName(marketId: number, outcomeId: number, match: Match): string {
-    if (marketId === 101) {
-      if (outcomeId === 101) return match.homeTeam !== 'Unknown' ? match.homeTeam : 'Casa';
-      if (outcomeId === 102) return 'Empate';
-      if (outcomeId === 103) return match.awayTeam !== 'Unknown' ? match.awayTeam : 'Fora';
+  private static extractV3Outcomes(
+    marketKey: string,
+    entry: OddsApiV3OddsEntry,
+    match: Match,
+  ): Outcome[] {
+    const id = match.externalId;
+    const outcomes: Outcome[] = [];
+
+    if (marketKey === 'h2h') {
+      if (entry.home) {
+        outcomes.push({
+          selectionId: `${id}:h2h:home`,
+          name: match.homeTeam !== 'Unknown' ? match.homeTeam : 'Casa',
+          price: parseFloat(entry.home),
+        });
+      }
+      if (entry.draw) {
+        outcomes.push({
+          selectionId: `${id}:h2h:draw`,
+          name: 'Empate',
+          price: parseFloat(entry.draw),
+        });
+      }
+      if (entry.away) {
+        outcomes.push({
+          selectionId: `${id}:h2h:away`,
+          name: match.awayTeam !== 'Unknown' ? match.awayTeam : 'Fora',
+          price: parseFloat(entry.away),
+        });
+      }
+    } else if (marketKey === 'totals' && entry.over && entry.under) {
+      const line = entry.hdp !== undefined ? entry.hdp.toString() : '2.5';
+      outcomes.push(
+        { selectionId: `${id}:totals:over`, name: `Over ${line}`, price: parseFloat(entry.over) },
+        {
+          selectionId: `${id}:totals:under`,
+          name: `Under ${line}`,
+          price: parseFloat(entry.under),
+        },
+      );
+    } else if (marketKey === 'spreads' && entry.home && entry.away) {
+      const hdp = entry.hdp ?? 0;
+      const awayHdp = hdp === 0 ? 0 : -hdp;
+      outcomes.push(
+        {
+          selectionId: `${id}:spreads:home`,
+          name: `Casa ${hdp > 0 ? '+' : ''}${hdp.toString()}`,
+          price: parseFloat(entry.home),
+        },
+        {
+          selectionId: `${id}:spreads:away`,
+          name: `Fora ${awayHdp > 0 ? '+' : ''}${awayHdp.toString()}`,
+          price: parseFloat(entry.away),
+        },
+      );
     }
-    return H2H_OUTCOME_NAMES[outcomeId] ?? `Outcome ${outcomeId.toString()}`;
+
+    return outcomes;
   }
 }

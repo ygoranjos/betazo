@@ -1,85 +1,6 @@
 import { ProviderMapper } from './provider.mapper';
-import type {
-  OddspapiFixturePayload,
-  OddspapiRestFixture,
-} from '../dto/oddspapi-fixture-payload.dto';
-import type { OddspapiOddsPayload } from '../dto/oddspapi-odds-payload.dto';
+import type { OddsApiV3Message } from '../dto/oddsapi-v3-message.dto';
 import type { Match } from '../interfaces/match.interface';
-
-const makeFixture = (overrides: Partial<OddspapiFixturePayload> = {}): OddspapiFixturePayload => ({
-  fixtureId: 'ext-001',
-  status: { live: false, statusId: 0 },
-  startTime: 1743278400000,
-  participants: {
-    participant1: { id: 1, name: 'Manchester City' },
-    participant2: { id: 2, name: 'Arsenal' },
-  },
-  sport: { id: 1, name: 'Soccer' },
-  tournament: { id: 100, name: 'Premier League' },
-  ...overrides,
-});
-
-const makeRestFixture = (overrides: Partial<OddspapiRestFixture> = {}): OddspapiRestFixture => ({
-  fixtureId: 'ext-001',
-  participant1Name: 'Manchester City',
-  participant2Name: 'Arsenal',
-  statusId: 0,
-  startTime: 1743278400000,
-  ...overrides,
-});
-
-const makeOddsPayload = (overrides: Partial<OddspapiOddsPayload> = {}): OddspapiOddsPayload => ({
-  fixtureId: 'ext-001',
-  bookmakerOdds: {
-    bet365: {
-      bookmaker: 'bet365',
-      markets: {
-        '101': {
-          marketId: 101,
-          outcomes: {
-            '101': {
-              outcomeId: 101,
-              players: {
-                '0': {
-                  playerId: '0',
-                  price: 2.1,
-                  active: true,
-                  marketActive: true,
-                  oddsId: 'ext-001:bet365:101:0',
-                },
-              },
-            },
-            '102': {
-              outcomeId: 102,
-              players: {
-                '0': {
-                  playerId: '0',
-                  price: 3.4,
-                  active: true,
-                  marketActive: true,
-                  oddsId: 'ext-001:bet365:102:0',
-                },
-              },
-            },
-            '103': {
-              outcomeId: 103,
-              players: {
-                '0': {
-                  playerId: '0',
-                  price: 3.2,
-                  active: true,
-                  marketActive: true,
-                  oddsId: 'ext-001:bet365:103:0',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ...overrides,
-});
 
 const baseMatch: Match = {
   id: 'internal-id',
@@ -94,15 +15,28 @@ const baseMatch: Match = {
     {
       id: 'h2h',
       name: 'Resultado Final',
-      outcomes: [{ selectionId: 'old-id', name: 'Manchester City', price: 2.0 }],
+      outcomes: [{ selectionId: 'ext-001:h2h:home', name: 'Manchester City', price: 2.0 }],
     },
     {
       id: 'totals',
       name: 'Total de Gols',
-      outcomes: [{ selectionId: 'over-id', name: 'Over 2.5', price: 1.85 }],
+      outcomes: [{ selectionId: 'ext-001:totals:over', name: 'Over 2.5', price: 1.85 }],
     },
   ],
 };
+
+const makeV3Message = (overrides: Partial<OddsApiV3Message> = {}): OddsApiV3Message => ({
+  bookie: 'Bet365',
+  id: 'ext-001',
+  date: '2025-03-29T20:00:00Z',
+  markets: [
+    {
+      name: '3-Way Result',
+      odds: [{ home: '2.10', draw: '3.40', away: '3.20' }],
+    },
+  ],
+  ...overrides,
+});
 
 describe('ProviderMapper', () => {
   describe('generateInternalId', () => {
@@ -125,51 +59,6 @@ describe('ProviderMapper', () => {
     });
   });
 
-  describe('mapStatusId', () => {
-    it.each([
-      [0, 'pre_match'],
-      [1, 'live'],
-      [2, 'settled'],
-      [3, 'settled'],
-    ] as const)('statusId %i deve mapear para %s', (statusId, expected) => {
-      expect(ProviderMapper.mapStatusId(statusId)).toBe(expected);
-    });
-
-    it('deve retornar pre_match para undefined', () => {
-      expect(ProviderMapper.mapStatusId(undefined)).toBe('pre_match');
-    });
-
-    it('deve retornar pre_match para statusId desconhecido', () => {
-      expect(ProviderMapper.mapStatusId(99)).toBe('pre_match');
-    });
-  });
-
-  describe('mapFixtureStatus', () => {
-    it('deve retornar live quando isLive=true independente do statusId', () => {
-      expect(ProviderMapper.mapFixtureStatus(0, true)).toBe('live');
-      expect(ProviderMapper.mapFixtureStatus(2, true)).toBe('live');
-    });
-
-    it('deve usar o statusId quando isLive=false', () => {
-      expect(ProviderMapper.mapFixtureStatus(0, false)).toBe('pre_match');
-      expect(ProviderMapper.mapFixtureStatus(2, false)).toBe('settled');
-    });
-
-    it('deve lidar com valores undefined', () => {
-      expect(ProviderMapper.mapFixtureStatus(undefined, undefined)).toBe('pre_match');
-    });
-  });
-
-  describe('mapMarketId', () => {
-    it('deve mapear o marketId numérico 101 para h2h', () => {
-      expect(ProviderMapper.mapMarketId(101)).toBe('h2h');
-    });
-
-    it('deve retornar market_N para ids numéricos desconhecidos', () => {
-      expect(ProviderMapper.mapMarketId(999)).toBe('market_999');
-    });
-  });
-
   describe('mapMarketName', () => {
     it.each([
       ['h2h', 'Resultado Final'],
@@ -187,175 +76,146 @@ describe('ProviderMapper', () => {
 
   describe('epochToIso', () => {
     it('deve converter epoch em ms para string ISO', () => {
-      const resultado = ProviderMapper.epochToIso(1743278400000);
-      expect(resultado).toBe('2025-03-29T20:00:00.000Z');
+      expect(ProviderMapper.epochToIso(1743278400000)).toBe('2025-03-29T20:00:00.000Z');
     });
 
     it('deve retornar uma ISO string válida para epoch ausente', () => {
-      const resultado = ProviderMapper.epochToIso(undefined);
-      expect(resultado).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expect(ProviderMapper.epochToIso(undefined)).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     });
   });
 
-  describe('mapFixture', () => {
-    it('deve mapear todos os campos de um fixture completo', () => {
-      const match = ProviderMapper.mapFixture(makeFixture());
+  describe('mapV3MarketKey', () => {
+    it.each([
+      ['ML', 'h2h'],
+      ['ml', 'h2h'],
+      ['Moneyline', 'h2h'],
+      ['3-Way Result', 'h2h'],
+      ['Totals', 'totals'],
+      ['Goals Over/Under', 'totals'],
+      ['Spread', 'spreads'],
+      ['Asian Handicap', 'spreads'],
+      ['Corners', 'corners'],
+      ['Cards', 'cards'],
+    ] as const)('"%s" deve mapear para "%s"', (name, expected) => {
+      expect(ProviderMapper.mapV3MarketKey(name)).toBe(expected);
+    });
 
-      expect(match.externalId).toBe('ext-001');
+    it('deve retornar null para mercados desconhecidos', () => {
+      expect(ProviderMapper.mapV3MarketKey('Mercado Desconhecido')).toBeNull();
+    });
+  });
+
+  describe('createV3Match', () => {
+    it('deve criar um match mínimo com os campos corretos', () => {
+      const match = ProviderMapper.createV3Match('ext-999', '2025-04-01T18:00:00Z');
+
+      expect(match.externalId).toBe('ext-999');
       expect(match.id).toHaveLength(36);
-      expect(match.sport).toBe('soccer');
-      expect(match.competition).toBe('Premier League');
-      expect(match.homeTeam).toBe('Manchester City');
-      expect(match.awayTeam).toBe('Arsenal');
-      expect(match.startTime).toBe('2025-03-29T20:00:00.000Z');
+      expect(match.startTime).toBe('2025-04-01T18:00:00Z');
       expect(match.status).toBe('pre_match');
+      expect(match.homeTeam).toBe('Unknown');
+      expect(match.awayTeam).toBe('Unknown');
       expect(match.markets).toEqual([]);
     });
 
-    it('deve usar valores padrão quando campos opcionais estão ausentes', () => {
-      const match = ProviderMapper.mapFixture({ fixtureId: 'ext-bare' });
-
-      expect(match.sport).toBe('unknown');
-      expect(match.competition).toBe('Unknown');
-      expect(match.homeTeam).toBe('Unknown');
-      expect(match.awayTeam).toBe('Unknown');
-      expect(match.status).toBe('pre_match');
-    });
-
-    it('deve mapear status live quando status.live=true', () => {
-      const match = ProviderMapper.mapFixture(makeFixture({ status: { live: true, statusId: 1 } }));
-      expect(match.status).toBe('live');
-    });
-
-    it('deve mapear status settled quando statusId=2', () => {
-      const match = ProviderMapper.mapFixture(
-        makeFixture({ status: { live: false, statusId: 2 } }),
-      );
-      expect(match.status).toBe('settled');
+    it('deve usar a data atual quando date é null', () => {
+      const match = ProviderMapper.createV3Match('ext-999', null);
+      expect(match.startTime).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     });
   });
 
-  describe('mapRestFixture', () => {
-    it('deve mapear os campos do fixture REST corretamente', () => {
-      const match = ProviderMapper.mapRestFixture(makeRestFixture());
+  describe('applyV3OddsUpdate', () => {
+    it('deve adicionar mercado h2h com 3 outcomes a partir de 3-Way Result', () => {
+      const msg = makeV3Message();
+      const result = ProviderMapper.applyV3OddsUpdate(baseMatch, msg);
 
-      expect(match.externalId).toBe('ext-001');
-      expect(match.homeTeam).toBe('Manchester City');
-      expect(match.awayTeam).toBe('Arsenal');
-      expect(match.status).toBe('pre_match');
-      expect(match.startTime).toBe('2025-03-29T20:00:00.000Z');
-      expect(match.markets).toEqual([]);
-    });
-
-    it('deve usar valores padrão para campos opcionais ausentes', () => {
-      const match = ProviderMapper.mapRestFixture({ fixtureId: 'ext-bare' });
-
-      expect(match.homeTeam).toBe('Unknown');
-      expect(match.awayTeam).toBe('Unknown');
-      expect(match.status).toBe('pre_match');
-      expect(match.sport).toBe('unknown');
-    });
-  });
-
-  describe('applyFixtureDelta', () => {
-    it('deve atualizar o status a partir do delta', () => {
-      const delta: OddspapiFixturePayload = {
-        fixtureId: 'ext-001',
-        status: { live: true, statusId: 1 },
-      };
-      const atualizado = ProviderMapper.applyFixtureDelta(baseMatch, delta);
-      expect(atualizado.status).toBe('live');
-    });
-
-    it('deve atualizar o nome do time a partir do delta', () => {
-      const delta: OddspapiFixturePayload = {
-        fixtureId: 'ext-001',
-        participants: {
-          participant1: { id: 1, name: 'Man City Atualizado' },
-        },
-      };
-      const atualizado = ProviderMapper.applyFixtureDelta(baseMatch, delta);
-      expect(atualizado.homeTeam).toBe('Man City Atualizado');
-      expect(atualizado.awayTeam).toBe('Arsenal');
-    });
-
-    it('não deve mutar o match original', () => {
-      const delta: OddspapiFixturePayload = {
-        fixtureId: 'ext-001',
-        status: { live: false, statusId: 2 },
-      };
-      ProviderMapper.applyFixtureDelta(baseMatch, delta);
-      expect(baseMatch.status).toBe('live');
-    });
-  });
-
-  describe('applyOddsUpdate', () => {
-    it('deve substituir um mercado existente quando o marketId bate', () => {
-      const payload = makeOddsPayload();
-      const atualizado = ProviderMapper.applyOddsUpdate(baseMatch, payload);
-
-      const h2h = atualizado.markets.find((m) => m.id === 'h2h');
+      const h2h = result.markets.find((m) => m.id === 'h2h');
       expect(h2h?.outcomes).toHaveLength(3);
-      expect(h2h?.outcomes[0].price).toBe(2.1);
+      expect(h2h?.outcomes[0]).toEqual({
+        selectionId: 'ext-001:h2h:home',
+        name: 'Manchester City',
+        price: 2.1,
+      });
+      expect(h2h?.outcomes[1]).toEqual({ selectionId: 'ext-001:h2h:draw', name: 'Empate', price: 3.4 });
+      expect(h2h?.outcomes[2]).toEqual({
+        selectionId: 'ext-001:h2h:away',
+        name: 'Arsenal',
+        price: 3.2,
+      });
     });
 
-    it('deve usar os nomes dos times como nome dos outcomes do h2h', () => {
-      const payload = makeOddsPayload();
-      const atualizado = ProviderMapper.applyOddsUpdate(baseMatch, payload);
+    it('deve adicionar mercado h2h com 2 outcomes a partir de ML sem empate', () => {
+      const msg = makeV3Message({
+        markets: [{ name: 'ML', odds: [{ home: '2.00', away: '1.72' }] }],
+      });
+      const match = ProviderMapper.createV3Match('ext-001', null);
+      const result = ProviderMapper.applyV3OddsUpdate(match, msg);
 
-      const h2h = atualizado.markets.find((m) => m.id === 'h2h');
-      const outcomeHome = h2h?.outcomes.find((o) => o.selectionId === 'ext-001:bet365:101:0');
-      expect(outcomeHome?.name).toBe('Manchester City');
+      const h2h = result.markets.find((m) => m.id === 'h2h');
+      expect(h2h?.outcomes).toHaveLength(2);
+    });
 
-      const outcomeEmpate = h2h?.outcomes.find((o) => o.selectionId === 'ext-001:bet365:102:0');
-      expect(outcomeEmpate?.name).toBe('Empate');
+    it('deve adicionar mercado totals com over e under', () => {
+      const msg = makeV3Message({
+        markets: [{ name: 'Totals', odds: [{ hdp: 2.5, over: '1.80', under: '2.00' }] }],
+      });
+      const result = ProviderMapper.applyV3OddsUpdate(baseMatch, msg);
+
+      const totals = result.markets.find((m) => m.id === 'totals');
+      expect(totals?.outcomes).toHaveLength(2);
+      expect(totals?.outcomes[0]).toEqual({
+        selectionId: 'ext-001:totals:over',
+        name: 'Over 2.5',
+        price: 1.8,
+      });
+      expect(totals?.outcomes[1]).toEqual({
+        selectionId: 'ext-001:totals:under',
+        name: 'Under 2.5',
+        price: 2.0,
+      });
+    });
+
+    it('deve adicionar mercado spreads com handicap', () => {
+      const msg = makeV3Message({
+        markets: [{ name: 'Spread', odds: [{ hdp: -1.5, home: '1.44', away: '2.62' }] }],
+      });
+      const result = ProviderMapper.applyV3OddsUpdate(baseMatch, msg);
+
+      const spreads = result.markets.find((m) => m.id === 'spreads');
+      expect(spreads?.outcomes).toHaveLength(2);
+      expect(spreads?.outcomes[0].name).toBe('Casa -1.5');
+      expect(spreads?.outcomes[1].name).toBe('Fora +1.5');
     });
 
     it('deve preservar mercados não incluídos na atualização', () => {
-      const payload = makeOddsPayload();
-      const atualizado = ProviderMapper.applyOddsUpdate(baseMatch, payload);
-
-      expect(atualizado.markets.find((m) => m.id === 'totals')).toBeDefined();
-    });
-
-    it('deve retornar a mesma referência do match quando não há mercados recebidos', () => {
-      const payload: OddspapiOddsPayload = { fixtureId: 'ext-001', bookmakerOdds: {} };
-      const resultado = ProviderMapper.applyOddsUpdate(baseMatch, payload);
-      expect(resultado).toBe(baseMatch);
-    });
-
-    it('deve preservar o mercado original quando todos os outcomes recebidos são inativos', () => {
-      const payload = makeOddsPayload({
-        bookmakerOdds: {
-          bet365: {
-            bookmaker: 'bet365',
-            markets: {
-              '101': {
-                marketId: 101,
-                outcomes: {
-                  '101': {
-                    outcomeId: 101,
-                    players: {
-                      '0': { playerId: '0', price: 2.1, active: false, marketActive: true },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
+      const msg = makeV3Message({
+        markets: [{ name: '3-Way Result', odds: [{ home: '2.10', draw: '3.40', away: '3.20' }] }],
       });
+      const result = ProviderMapper.applyV3OddsUpdate(baseMatch, msg);
 
-      const atualizado = ProviderMapper.applyOddsUpdate(baseMatch, payload);
+      expect(result.markets.find((m) => m.id === 'totals')).toBeDefined();
+    });
 
-      const h2h = atualizado.markets.find((m) => m.id === 'h2h');
-      expect(h2h?.outcomes[0].price).toBe(2.0);
+    it('deve retornar a mesma referência quando não há mercados reconhecidos', () => {
+      const msg = makeV3Message({ markets: [] });
+      const result = ProviderMapper.applyV3OddsUpdate(baseMatch, msg);
+      expect(result).toBe(baseMatch);
     });
 
     it('não deve mutar o match original', () => {
-      const payload = makeOddsPayload();
-      ProviderMapper.applyOddsUpdate(baseMatch, payload);
+      const msg = makeV3Message();
+      ProviderMapper.applyV3OddsUpdate(baseMatch, msg);
       expect(baseMatch.markets[0].outcomes[0].price).toBe(2.0);
+    });
+
+    it('deve usar "Casa"/"Fora" quando os nomes dos times são Unknown', () => {
+      const match = ProviderMapper.createV3Match('ext-001', null);
+      const msg = makeV3Message();
+      const result = ProviderMapper.applyV3OddsUpdate(match, msg);
+
+      const h2h = result.markets.find((m) => m.id === 'h2h');
+      expect(h2h?.outcomes[0].name).toBe('Casa');
+      expect(h2h?.outcomes[2].name).toBe('Fora');
     });
   });
 });
