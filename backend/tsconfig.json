@@ -23,7 +23,9 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@betazo/database": ["libs/database/src/index.ts"],
-      "@betazo/database/*": ["libs/database/src/*"]
+      "@betazo/database/*": ["libs/database/src/*"],
+      "@betazo/redis-cache": ["libs/redis-cache/src/index.ts"],
+      "@betazo/redis-cache/*": ["libs/redis-cache/src/*"]
     }
   }
 }
