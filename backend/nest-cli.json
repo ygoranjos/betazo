@@ -55,6 +55,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/redis-cache/tsconfig.lib.json"
       }
+    },
+    "betting-service": {
+      "type": "application",
+      "root": "apps/betting-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/betting-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/betting-service/tsconfig.app.json"
+      }
     }
   }
 }
