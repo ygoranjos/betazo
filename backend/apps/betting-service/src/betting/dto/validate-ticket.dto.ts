@@ -24,6 +24,10 @@ export class SelectionDto {
 }
 
 export class ValidateTicketDto {
+  @IsNumber()
+  @Min(0.01)
+  stake: number;
+
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
