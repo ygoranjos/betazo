@@ -30,3 +30,12 @@ model Wallet {
 
   @@map("wallets")
 }
+
+model HouseConfig {
+  id                 String   @id @default(uuid())
+  minBetAmount       Decimal  @map("min_bet_amount") @db.Decimal(18, 2)
+  maxPayoutPerTicket Decimal  @map("max_payout_per_ticket") @db.Decimal(18, 2)
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@map("house_configs")
+}
