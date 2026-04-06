@@ -16,12 +16,22 @@ export class AuthService {
   async register(dto: RegisterDto) {
     const email = dto.email.toLowerCase();
 
-    const existing = await this.prisma.user.findFirst({
-      where: { OR: [{ email }, { username: dto.username }] },
+    // Verificar se o email já existe
+    const existingEmail = await this.prisma.user.findUnique({
+      where: { email },
     });
 
-    if (existing) {
-      throw new ConflictException('Email ou username já em uso');
+    if (existingEmail) {
+      throw new ConflictException('Email já cadastrado');
+    }
+
+    // Verificar se o username já existe
+    const existingUsername = await this.prisma.user.findUnique({
+      where: { username: dto.username },
+    });
+
+    if (existingUsername) {
+      throw new ConflictException('Username já cadastrado');
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
@@ -48,6 +58,7 @@ export class AuthService {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
         throw new ConflictException('Erro ao cadastrar usuário');
       }
+      console.error('Erro ao cadastrar usuário:', err);
       throw err;
     }
   }

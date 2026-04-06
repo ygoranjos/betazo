@@ -1,4 +1,4 @@
-// File: /home/allan/betzao/betazo/app/layout.tsx
+// File: /home/allan/betzao/betazo/frontend/app/layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

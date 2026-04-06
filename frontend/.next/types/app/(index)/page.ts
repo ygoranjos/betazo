@@ -1,4 +1,4 @@
-// File: /home/allan/betzao/betazo/app/(index)/page.tsx
+// File: /home/allan/betzao/betazo/frontend/app/(index)/page.tsx
 import * as entry from '../../../../app/(index)/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
