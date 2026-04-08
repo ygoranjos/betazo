@@ -3,21 +3,28 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 5000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
     "@headlessui/react": "^2.0.0",
+    "@hookform/resolvers": "^5.2.2",
+    "@popperjs/core": "^2.11.8",
+    "@tanstack/react-query": "^5.96.1",
+    "axios": "^1.14.0",
     "bootstrap": "^5.3.3",
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hook-form": "^7.72.1",
     "react-modal-video": "^2.0.0",
     "react-slick": "^0.30.2",
     "sass": "^1.80.0",
-    "slick-carousel": "^1.8.1"
+    "slick-carousel": "^1.8.1",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

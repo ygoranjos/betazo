@@ -2,22 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
 import logo from "/public/img/logo/logo.png";
+import { useUIStore } from "@/store";
 
-interface DashboardHeaderProps {
-  isOpen?: boolean;
-  setIsOpen?: (value: boolean) => void;
-}
+const DashboardHeader = () => {
+  // Use UI store instead of local useState
+  const { mobileMenuOpen, toggleMobileMenu, dashboardMenuOpen, toggleDashboardMenu } = useUIStore();
 
-const DashboardHeader = ({ isOpen, setIsOpen }: DashboardHeaderProps) => {
-  const [menuActive, setMenuActive] = useState<boolean>(false);
-
-  const handleIsOpen = (e: React.MouseEvent) => {
+  const handleDropdownClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (setIsOpen) {
-      setIsOpen(!isOpen);
-    }
+    toggleDashboardMenu();
   };
 
   return (
@@ -30,34 +24,34 @@ const DashboardHeader = ({ isOpen, setIsOpen }: DashboardHeaderProps) => {
                 <Image src={logo} alt="logo" />
               </Link>
             </div>
-            <ul className={`main-menu ${menuActive ? "active" : ""}`}>
+            <ul className={`main-menu ${mobileMenuOpen ? "active" : ""}`}>
               <li>
-                <Link href="/">
+                <Link href="/" onClick={() => mobileMenuOpen && toggleMobileMenu()}>
                   <span>Live</span>
                 </Link>
               </li>
               <li>
-                <Link href="/sportsbetting">
+                <Link href="/sportsbetting" onClick={() => mobileMenuOpen && toggleMobileMenu()}>
                   <span>Sports Betting</span>
                 </Link>
               </li>
               <li>
-                <Link href="/casino" className="active">
+                <Link href="/casino" className="active" onClick={() => mobileMenuOpen && toggleMobileMenu()}>
                   <span>Casino</span>
                 </Link>
               </li>
               <li>
-                <Link href="URL:void()">
+                <Link href="URL:void()" onClick={() => mobileMenuOpen && toggleMobileMenu()}>
                   <span>Lucky Drops</span>
                 </Link>
               </li>
               <li>
-                <Link href="/livecasino">
+                <Link href="/livecasino" onClick={() => mobileMenuOpen && toggleMobileMenu()}>
                   <span>Live Casino</span>
                 </Link>
               </li>
               <li>
-                <Link href="/promotions">
+                <Link href="/promotions" onClick={() => mobileMenuOpen && toggleMobileMenu()}>
                   <span>Promotions</span>
                 </Link>
               </li>
@@ -87,57 +81,37 @@ const DashboardHeader = ({ isOpen, setIsOpen }: DashboardHeaderProps) => {
                 <i className="icon-message"></i>
                 <span className="count">2</span>
               </Link>
-              <div className="custom-dropdown" onClick={handleIsOpen}>
-                <div
-                  className="custom-dropdown__user"
-                  data-set="custom-dropdown"
-                >
+              <div className="custom-dropdown" onClick={handleDropdownClick}>
+                <div className="custom-dropdown__user" data-set="custom-dropdown">
                   <Link href="URL:void()" className="icons">
                     <i className="icon-user text-white"></i>
                   </Link>
                 </div>
-                <div
-                  className={`custom-dropdown__content ${isOpen ? "is-open" : ""}`}
-                >
+                <div className={`custom-dropdown__content ${dashboardMenuOpen ? "is-open" : ""}`}>
                   <div className="custom-dropdown__body">
                     <ul className="custom-dropdown__list">
                       <li>
-                        <Link
-                          href="/dashboard"
-                          className="custom-dropdown__body-link"
-                        >
+                        <Link href="/dashboard" className="custom-dropdown__body-link">
                           <span className="custom-dropdown__body-icon">
                             <i className="fas fa-layer-group"></i>
                           </span>
-                          <span className="custom-dropdown__body-text">
-                            Dashboard
-                          </span>
+                          <span className="custom-dropdown__body-text">Dashboard</span>
                         </Link>
                       </li>
                       <li>
-                        <Link
-                          href="URL:void()"
-                          className="custom-dropdown__body-link"
-                        >
+                        <Link href="URL:void()" className="custom-dropdown__body-link">
                           <span className="custom-dropdown__body-icon">
                             <i className="fas fa-cog"></i>
                           </span>
-                          <span className="custom-dropdown__body-text">
-                            Settings
-                          </span>
+                          <span className="custom-dropdown__body-text">Settings</span>
                         </Link>
                       </li>
                       <li>
-                        <Link
-                          href="URL:void()"
-                          className="custom-dropdown__body-link"
-                        >
+                        <Link href="URL:void()" className="custom-dropdown__body-link">
                           <span className="custom-dropdown__body-icon">
                             <i className="fas fa-sign-out-alt"></i>
                           </span>
-                          <span className="custom-dropdown__body-text">
-                            Logout
-                          </span>
+                          <span className="custom-dropdown__body-text">Logout</span>
                         </Link>
                       </li>
                     </ul>
@@ -147,8 +121,8 @@ const DashboardHeader = ({ isOpen, setIsOpen }: DashboardHeaderProps) => {
             </div>
             <div className="lang d-flex align-items-center px-2">
               <div
-                className={`header-bar d-lg-none ${menuActive ? "active" : ""}`}
-                onClick={() => setMenuActive(!menuActive)}
+                className={`header-bar d-lg-none ${mobileMenuOpen ? "active" : ""}`}
+                onClick={toggleMobileMenu}
               >
                 <span></span>
                 <span></span>

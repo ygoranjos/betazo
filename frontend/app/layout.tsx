@@ -4,6 +4,9 @@ import LeftBetsModal from "@/components/modals/LeftBetsModal";
 import LoginModal from "@/components/modals/LoginModal";
 import RightBetsModal from "@/components/modals/RightBetsModal";
 import SignUpModal from "@/components/modals/SignUpModal";
+import { QueryClientProvider } from "@/components/providers/QueryProvider";
+import { AuthProvider } from "@/components/providers/AuthProvider";
+import { ToastContainer } from "@/components/common";
 
 // fonts
 import "../public/vendor/glyphter-font/css/glyphter.css";
@@ -28,13 +31,18 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body>
-        <Bootstrap>
-          {children}
-          <LoginModal />
-          <SignUpModal />
-          <LeftBetsModal />
-          <RightBetsModal />
-        </Bootstrap>
+        <QueryClientProvider>
+          <AuthProvider>
+            <Bootstrap>
+              {children}
+              <LoginModal />
+              <SignUpModal />
+              <LeftBetsModal />
+              <RightBetsModal />
+              <ToastContainer />
+            </Bootstrap>
+          </AuthProvider>
+        </QueryClientProvider>
       </body>
     </html>
   );

@@ -1,23 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import DashboardSideBar from "../common/DashboardSideBar";
 import FooterMobile from "../footer/FooterMobile";
 import DashboardHeader from "../header/DashboardHeader";
 import type { LayoutProps } from "@/types";
+import { useUIStore } from "@/store";
 
-interface DashboardMainProps extends LayoutProps {
-  isOpen?: boolean;
-  setIsOpen?: (value: boolean) => void;
-}
-
-const DashboardMain = ({ children }: DashboardMainProps) => {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+const DashboardMain = ({ children }: LayoutProps) => {
+  const { setDashboardMenu } = useUIStore();
 
   return (
-    <div onClick={() => setIsOpen(false)}>
+    <div onClick={() => setDashboardMenu(false)}>
       {/* Dashboard Header */}
-      <DashboardHeader isOpen={isOpen} setIsOpen={setIsOpen} />
+      <DashboardHeader />
 
       <section className="dashboard__body mt__30 pb-60">
         <div className="container">

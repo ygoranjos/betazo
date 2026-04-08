@@ -1,5 +1,4 @@
 services:
-
   # PostgreSQL 15
   postgres:
     image: postgres:15-alpine
@@ -18,6 +17,8 @@ services:
       retries: 5
     networks:
       - betazo_network
+    ports:
+      - "5432:5432" # Expondo porta para acesso externo (opcional, pode ser omitido para isolamento total)
 
   # PgBouncer - Connection Pooler
   pgbouncer:
@@ -31,10 +32,10 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: ${POSTGRES_DB}
       LISTEN_PORT: 6432
-      POOL_MODE: transaction        # Modo transaction: libera conexão após cada query
-      MAX_CLIENT_CONN: 1000         # Máximo de clientes simultâneos (NestJS instances)
-      DEFAULT_POOL_SIZE: 20         # Conexões reais abertas com o PostgreSQL
-      AUTH_TYPE: plain               # PgBouncer verifica senha em texto puro do cliente
+      POOL_MODE: transaction # Modo transaction: libera conexão após cada query
+      MAX_CLIENT_CONN: 1000 # Máximo de clientes simultâneos (NestJS instances)
+      DEFAULT_POOL_SIZE: 20 # Conexões reais abertas com o PostgreSQL
+      AUTH_TYPE: plain # PgBouncer verifica senha em texto puro do cliente
     depends_on:
       postgres:
         condition: service_healthy
@@ -64,6 +65,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    ports:
+      - "6379:6379"
     networks:
       - betazo_network
 
@@ -93,19 +96,137 @@ services:
       # Tópicos e retenção
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_DEFAULT_REPLICATION_FACTOR: 1
-      KAFKA_NUM_PARTITIONS: 3             # 3 partições = paralelismo nos workers
-      KAFKA_LOG_RETENTION_HOURS: 168      # Retenção de 7 dias
+      KAFKA_NUM_PARTITIONS: 3 # 3 partições = paralelismo nos workers
+      KAFKA_LOG_RETENTION_HOURS: 168 # Retenção de 7 dias
       KAFKA_LOG_SEGMENT_BYTES: 1073741824 # Segmentos de 1 GB
     volumes:
       - kafka_data:/var/lib/kafka/data
     healthcheck:
-      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list",
+        ]
       interval: 15s
       timeout: 10s
       retries: 10
       start_period: 30s
     networks:
       - betazo_network
+
+  # Migrate - roda as migrations e encerra
+  migrate:
+    build:
+      context: ./backend
+      target: migrate
+    container_name: betazo_migrate
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DIRECT_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - betazo_network
+    restart: "no"
+
+  # Auth Service - porta 3000
+  auth-service:
+    build:
+      context: ./backend
+      target: runner
+      args:
+        APP_NAME: auth-service
+    container_name: betazo_auth
+    env_file: ./backend/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB}
+      DIRECT_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - betazo_network
+    restart: unless-stopped
+
+  # API Gateway - porta 3001
+  api-gateway:
+    build:
+      context: ./backend
+      target: runner
+      args:
+        APP_NAME: api-gateway
+    container_name: betazo_api_gateway
+    env_file: ./backend/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB}
+      DIRECT_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - betazo_network
+    restart: unless-stopped
+
+  # Betting Service - porta 3003
+  betting-service:
+    build:
+      context: ./backend
+      target: runner
+      args:
+        APP_NAME: betting-service
+    container_name: betazo_betting
+    env_file: ./backend/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB}
+      DIRECT_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - betazo_network
+    restart: unless-stopped
+
+  # Live Odds Service - porta 3002
+  live-odds-service:
+    build:
+      context: ./backend
+      target: runner
+      args:
+        APP_NAME: live-odds-service
+    container_name: betazo_live_odds
+    env_file: ./backend/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - betazo_network
+    restart: unless-stopped
 
 # Volumes - dados persistentes entre restarts
 volumes:
