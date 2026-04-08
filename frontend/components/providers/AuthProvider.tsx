@@ -21,20 +21,13 @@ interface AuthProviderProps {
  * the app knows the authentication status immediately.
  */
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { refreshToken, setHasHydrated } = useAuthStore();
+  const { setHasHydrated } = useAuthStore();
 
   useEffect(() => {
-    // Initialize auth state on mount
-    const initAuth = () => {
-      refreshToken();
-      // Small delay to ensure localStorage is read
-      setTimeout(() => {
-        setHasHydrated(true);
-      }, 100);
-    };
-
-    initAuth();
-  }, [refreshToken, setHasHydrated]);
+    setTimeout(() => {
+      setHasHydrated(true);
+    }, 100);
+  }, [setHasHydrated]);
 
   const value = {
     isReady: true,

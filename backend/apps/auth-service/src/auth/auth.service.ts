@@ -1,10 +1,20 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '@betazo/database';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+
+interface JwtPayload {
+  sub: string;
+  email: string;
+  username: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -13,25 +23,25 @@ export class AuthService {
     private readonly jwt: JwtService,
   ) {}
 
+  private generateTokens(payload: JwtPayload) {
+    const accessToken = this.jwt.sign(payload);
+    const refreshToken = this.jwt.sign(payload, {
+      secret: process.env.JWT_REFRESH_SECRET,
+      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
+    });
+    return { accessToken, refreshToken };
+  }
+
   async register(dto: RegisterDto) {
     const email = dto.email.toLowerCase();
 
-    // Verificar se o email já existe
-    const existingEmail = await this.prisma.user.findUnique({
-      where: { email },
-    });
+    const [existingEmail, existingUsername] = await Promise.all([
+      this.prisma.user.findUnique({ where: { email }, select: { id: true } }),
+      this.prisma.user.findUnique({ where: { username: dto.username }, select: { id: true } }),
+    ]);
 
-    if (existingEmail) {
-      throw new ConflictException('Email já cadastrado');
-    }
-
-    // Verificar se o username já existe
-    const existingUsername = await this.prisma.user.findUnique({
-      where: { username: dto.username },
-    });
-
-    if (existingUsername) {
-      throw new ConflictException('Username já cadastrado');
+    if (existingEmail || existingUsername) {
+      throw new ConflictException('Email ou username já cadastrado');
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
@@ -52,13 +62,12 @@ export class AuthService {
         },
       });
 
-      const accessToken = this.jwt.sign({ sub: user.id, email: user.email, username: user.username });
-      return { accessToken, user };
+      const tokens = this.generateTokens({ sub: user.id, email: user.email, username: user.username });
+      return { ...tokens, user };
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-        throw new ConflictException('Erro ao cadastrar usuário');
+        throw new ConflictException('Email ou username já cadastrado');
       }
-      console.error('Erro ao cadastrar usuário:', err);
       throw err;
     }
   }
@@ -69,19 +78,48 @@ export class AuthService {
       select: { id: true, email: true, username: true, passwordHash: true },
     });
 
-    if (!user) {
-      throw new UnauthorizedException('Credenciais inválidas');
-    }
+    // Always run bcrypt to prevent timing attacks
+    const hash = user?.passwordHash ?? '$2b$10$invalidhashplaceholderfortiming00';
+    const passwordMatch = await bcrypt.compare(dto.password, hash);
 
-    const passwordMatch = await bcrypt.compare(dto.password, user.passwordHash);
-
-    if (!passwordMatch) {
+    if (!user || !passwordMatch) {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
     const { passwordHash: _, ...userWithoutPassword } = user;
-    const accessToken = this.jwt.sign({ sub: user.id, email: user.email, username: user.username });
+    const tokens = this.generateTokens({ sub: user.id, email: user.email, username: user.username });
 
-    return { accessToken, user: userWithoutPassword };
+    return { ...tokens, user: userWithoutPassword };
+  }
+
+  async refresh(refreshToken: string) {
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token não encontrado');
+    }
+
+    try {
+      const payload = this.jwt.verify<JwtPayload>(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { id: true, email: true, username: true },
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('Usuário não encontrado');
+      }
+
+      const accessToken = this.jwt.sign({
+        sub: user.id,
+        email: user.email,
+        username: user.username,
+      });
+
+      return { accessToken, user };
+    } catch {
+      throw new UnauthorizedException('Refresh token inválido ou expirado');
+    }
   }
 }
