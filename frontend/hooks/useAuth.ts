@@ -27,7 +27,7 @@ export interface AuthResponse {
     username: string;
     createdAt: string;
   };
-  token: string;
+  accessToken: string;
   message?: string;
 }
 
@@ -94,7 +94,7 @@ export function useLogin() {
     },
     onSuccess: (data) => {
       console.log('[useLogin] Login successful:', data);
-      setAuth(data.user, data.token);
+      setAuth(data.user, data.accessToken);
       queryClient.invalidateQueries({ queryKey: ['user'] });
     },
     onError: (error) => {
@@ -113,7 +113,7 @@ export function useLogin() {
   });
 
   return {
-    login: mutation.mutate,
+    login: mutation.mutateAsync,
     isLoading: mutation.isPending,
     error: mutation.error,
     isSuccess: mutation.isSuccess,
@@ -143,7 +143,7 @@ export function useRegister() {
     },
     onSuccess: (data) => {
       console.log('[useRegister] Registration successful:', data);
-      setAuth(data.user, data.token);
+      setAuth(data.user, data.accessToken);
       queryClient.invalidateQueries({ queryKey: ['user'] });
     },
     onError: (error) => {
@@ -162,7 +162,7 @@ export function useRegister() {
   });
 
   return {
-    register: mutation.mutate,
+    register: mutation.mutateAsync,
     isLoading: mutation.isPending,
     error: mutation.error,
     isSuccess: mutation.isSuccess,

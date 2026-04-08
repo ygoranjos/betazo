@@ -37,7 +37,7 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
     try {
-      return await this.prisma.user.create({
+      const user = await this.prisma.user.create({
         data: {
           email,
           username: dto.username,
@@ -49,11 +49,11 @@ export class AuthService {
           email: true,
           username: true,
           createdAt: true,
-          wallet: {
-            select: { id: true, balance: true, createdAt: true },
-          },
         },
       });
+
+      const accessToken = this.jwt.sign({ sub: user.id, email: user.email, username: user.username });
+      return { accessToken, user };
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
         throw new ConflictException('Erro ao cadastrar usuário');
@@ -79,9 +79,9 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    const payload = { sub: user.id, email: user.email, username: user.username };
-    const accessToken = this.jwt.sign(payload);
+    const { passwordHash: _, ...userWithoutPassword } = user;
+    const accessToken = this.jwt.sign({ sub: user.id, email: user.email, username: user.username });
 
-    return { accessToken };
+    return { accessToken, user: userWithoutPassword };
   }
 }

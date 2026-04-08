@@ -114,6 +114,120 @@ services:
     networks:
       - betazo_network
 
+  # Migrate - roda as migrations e encerra
+  migrate:
+    build:
+      context: ./backend
+      target: migrate
+    container_name: betazo_migrate
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DIRECT_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - betazo_network
+    restart: "no"
+
+  # Auth Service - porta 3000
+  auth-service:
+    build:
+      context: ./backend
+      target: runner
+      args:
+        APP_NAME: auth-service
+    container_name: betazo_auth
+    env_file: ./backend/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB}
+      DIRECT_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - betazo_network
+    restart: unless-stopped
+
+  # API Gateway - porta 3001
+  api-gateway:
+    build:
+      context: ./backend
+      target: runner
+      args:
+        APP_NAME: api-gateway
+    container_name: betazo_api_gateway
+    env_file: ./backend/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB}
+      DIRECT_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - betazo_network
+    restart: unless-stopped
+
+  # Betting Service - porta 3003
+  betting-service:
+    build:
+      context: ./backend
+      target: runner
+      args:
+        APP_NAME: betting-service
+    container_name: betazo_betting
+    env_file: ./backend/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB}
+      DIRECT_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - betazo_network
+    restart: unless-stopped
+
+  # Live Odds Service - porta 3002
+  live-odds-service:
+    build:
+      context: ./backend
+      target: runner
+      args:
+        APP_NAME: live-odds-service
+    container_name: betazo_live_odds
+    env_file: ./backend/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - betazo_network
+    restart: unless-stopped
+
 # Volumes - dados persistentes entre restarts
 volumes:
   postgres_data:

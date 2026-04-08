@@ -4,8 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import modal from "/public/img/modal/modal.png";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useLogin, useRegister } from "@/hooks";
-import { success, error } from "@/store";
+import { useToastStore } from "@/store";
+import { loginSchema, registerSchema } from "@/lib/schemas";
 
 type Tab = "signin" | "signup";
 
@@ -37,7 +40,7 @@ const LoginModal = () => {
   // Mutations
   const loginMutation = useLogin();
   const registerMutation = useRegister();
-  const { success, error } = useStore();
+  const { success } = useToastStore();
 
   // Limpar erros e forms ao mudar de tab
   const handleTabChange = (tab: Tab) => {
@@ -49,7 +52,7 @@ const LoginModal = () => {
   // Handler de Login
   const handleLogin = async (data: { email: string; password: string }) => {
     try {
-      await loginMutation.mutate({ email: data.email, password: data.password });
+      await loginMutation.login({ email: data.email, password: data.password });
       success("Login realizado com sucesso!");
 
       // Fechar modal após login bem-sucedido
@@ -66,7 +69,7 @@ const LoginModal = () => {
   // Handler de Registro
   const handleRegister = async (data: { email: string; username: string; password: string }) => {
     try {
-      await registerMutation.mutate({
+      await registerMutation.register({
         email: data.email,
         username: data.username,
         password: data.password,
@@ -166,7 +169,7 @@ const LoginModal = () => {
                                 type="email"
                                 id="registerEmail"
                                 placeholder="Email Your"
-                                disabled={registerMutation.isPending}
+                                disabled={registerMutation.isLoading}
                                 {...registerSignup("email")}
                               />
                               {registerFormState.errors.email && (
@@ -179,7 +182,7 @@ const LoginModal = () => {
                                 type="text"
                                 id="registerUsername"
                                 placeholder="Username"
-                                disabled={registerMutation.isPending}
+                                disabled={registerMutation.isLoading}
                                 {...registerSignup("username")}
                               />
                               {registerFormState.errors.username && (
@@ -192,7 +195,7 @@ const LoginModal = () => {
                                 type="password"
                                 id="registerPassword"
                                 placeholder="Your Password"
-                                disabled={registerMutation.isPending}
+                                disabled={registerMutation.isLoading}
                                 {...registerSignup("password")}
                               />
                               {registerFormState.errors.password && (
@@ -205,7 +208,7 @@ const LoginModal = () => {
                                 type="password"
                                 id="registerConfirmPassword"
                                 placeholder="Password"
-                                disabled={registerMutation.isPending}
+                                disabled={registerMutation.isLoading}
                                 {...registerSignup("confirmPassword")}
                               />
                               {registerFormState.errors.confirmPassword && (
@@ -213,8 +216,8 @@ const LoginModal = () => {
                               )}
                             </div>
                             <div className="create__btn">
-                              <button type="submit" className="cmn--btn" disabled={registerMutation.isPending}>
-                                <span>{registerMutation.isPending ? "Registering..." : "Sign Up"}</span>
+                              <button type="submit" className="cmn--btn" disabled={registerMutation.isLoading}>
+                                <span>{registerMutation.isLoading ? "Registering..." : "Sign Up"}</span>
                               </button>
                             </div>
                             <p>
@@ -261,7 +264,7 @@ const LoginModal = () => {
                                 type="email"
                                 id="loginEmail"
                                 placeholder="Email Your"
-                                disabled={loginMutation.isPending}
+                                disabled={loginMutation.isLoading}
                                 {...registerLogin("email")}
                               />
                               {loginFormState.errors.email && (
@@ -274,7 +277,7 @@ const LoginModal = () => {
                                 type="password"
                                 id="loginPassword"
                                 placeholder="Your Password"
-                                disabled={loginMutation.isPending}
+                                disabled={loginMutation.isLoading}
                                 {...registerLogin("password")}
                               />
                               {loginFormState.errors.password && (
@@ -291,8 +294,8 @@ const LoginModal = () => {
                               <Link href="URL:void(0)">Forgot Password</Link>
                             </div>
                             <div className="create__btn">
-                              <button type="submit" className="cmn--btn" disabled={loginMutation.isPending}>
-                                <span>{loginMutation.isPending ? "Signing in..." : "Sign In"}</span>
+                              <button type="submit" className="cmn--btn" disabled={loginMutation.isLoading}>
+                                <span>{loginMutation.isLoading ? "Signing in..." : "Sign In"}</span>
                               </button>
                             </div>
                             <p>

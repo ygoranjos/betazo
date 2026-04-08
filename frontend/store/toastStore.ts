@@ -28,7 +28,6 @@ export const useToastStore = create<ToastState>((set) => ({
     const newToast = { ...toast, id };
     set((state) => ({ toasts: [...state.toasts, newToast] }));
 
-    // Auto-remove after duration (default 5000ms)
     const duration = toast.duration || 5000;
     setTimeout(() => {
       set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
@@ -41,43 +40,39 @@ export const useToastStore = create<ToastState>((set) => ({
   clearToasts: () =>
     set({ toasts: [] }),
 
-  success: (message, duration) =>
-    set((state) => {
-      const id = Math.random().toString(36).substring(2, 9);
-      const newToast = { id, type: 'success' as const, message, duration };
-      set((state) => ({ toasts: [...state.toasts, newToast] }));
-      setTimeout(() => {
-        set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
-      }, duration || 5000);
-    },
+  success: (message, duration) => {
+    const id = Math.random().toString(36).substring(2, 9);
+    const newToast = { id, type: 'success' as const, message, duration };
+    set((state) => ({ toasts: [...state.toasts, newToast] }));
+    setTimeout(() => {
+      set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
+    }, duration || 5000);
+  },
 
-  error: (message, duration) =>
-    set((state) => {
-      const id = Math.random().toString(36).substring(2, 9);
-      const newToast = { id, type: 'error' as const, message, duration };
-      set((state) => ({ toasts: [...state.toasts, newToast] }));
-      setTimeout(() => {
-        set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
-      }, duration || 5000);
-    },
+  error: (message, duration) => {
+    const id = Math.random().toString(36).substring(2, 9);
+    const newToast = { id, type: 'error' as const, message, duration };
+    set((state) => ({ toasts: [...state.toasts, newToast] }));
+    setTimeout(() => {
+      set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
+    }, duration || 5000);
+  },
 
-  warning: (message, duration) =>
-    set((state) => {
-      const id = Math.random().toString(36).substring(2, 9);
-      const newToast = { id, type: 'warning' as const, message, duration };
-      set((state) => ({ toasts: [...state.toasts, newToast] }));
-      setTimeout(() => {
-        set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
-      }, duration || 5000);
-    },
+  warning: (message, duration) => {
+    const id = Math.random().toString(36).substring(2, 9);
+    const newToast = { id, type: 'warning' as const, message, duration };
+    set((state) => ({ toasts: [...state.toasts, newToast] }));
+    setTimeout(() => {
+      set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
+    }, duration || 5000);
+  },
 
-  info: (message, duration) =>
-    set((state) => {
-      const id = Math.random().toString(36).substring(2, 9);
-      const newToast = { id, type: 'info' as const, message, duration };
-      set((state) => ({ toasts: [...state.toasts, newToast] }));
-      setTimeout(() => {
-        set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
-      }, duration || 5000);
-    },
-});
+  info: (message, duration) => {
+    const id = Math.random().toString(36).substring(2, 9);
+    const newToast = { id, type: 'info' as const, message, duration };
+    set((state) => ({ toasts: [...state.toasts, newToast] }));
+    setTimeout(() => {
+      set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
+    }, duration || 5000);
+  },
+}));
