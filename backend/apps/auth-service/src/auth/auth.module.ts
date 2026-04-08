@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { ThrottlerModule } from '@nestjs/throttler';
 import type { StringValue } from 'ms';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -8,8 +9,15 @@ import { AuthService } from './auth.service';
   imports: [
     JwtModule.register({
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: (process.env.JWT_EXPIRES_IN ?? '1d') as StringValue },
+      signOptions: { expiresIn: (process.env.JWT_EXPIRES_IN ?? '1h') as StringValue },
     }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'auth',
+        ttl: 15 * 60 * 1000, // 15 minutes in ms
+        limit: 5,
+      },
+    ]),
   ],
   controllers: [AuthController],
   providers: [AuthService],

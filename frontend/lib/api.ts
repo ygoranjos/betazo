@@ -1,104 +1,100 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-// Service URLs
 const AUTH_SERVICE_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:3000';
 const API_GATEWAY_URL = process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:3001';
 const LIVE_ODDS_URL = process.env.NEXT_PUBLIC_LIVE_ODDS_URL || 'http://localhost:3002';
 
-// Create axios instances
+// withCredentials ensures cookies are sent automatically on every request
 const authApi = axios.create({
   baseURL: AUTH_SERVICE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  withCredentials: true,
+  headers: { 'Content-Type': 'application/json' },
 });
 
 const gatewayApi = axios.create({
   baseURL: API_GATEWAY_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  withCredentials: true,
+  headers: { 'Content-Type': 'application/json' },
 });
 
 const liveOddsApi = axios.create({
   baseURL: LIVE_ODDS_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  withCredentials: true,
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Token getter from Zustand store (client-side only)
-const getAuthToken = (): string | null => {
-  if (typeof window === 'undefined') return null;
+// Tracks whether a refresh is already in progress to avoid parallel refresh calls
+let isRefreshing = false;
+let refreshSubscribers: Array<(success: boolean) => void> = [];
+
+const notifyRefreshSubscribers = (success: boolean) => {
+  refreshSubscribers.forEach((cb) => cb(success));
+  refreshSubscribers = [];
+};
+
+const tryRefreshToken = async (): Promise<boolean> => {
+  if (isRefreshing) {
+    return new Promise((resolve) => {
+      refreshSubscribers.push(resolve);
+    });
+  }
+
+  isRefreshing = true;
   try {
-    const storage = localStorage.getItem('betazo-auth-storage');
-    if (!storage) return null;
-    const parsed = JSON.parse(storage);
-    return parsed?.state?.token || null;
+    await authApi.post('/auth/refresh');
+    notifyRefreshSubscribers(true);
+    return true;
   } catch {
-    return null;
+    notifyRefreshSubscribers(false);
+    return false;
+  } finally {
+    isRefreshing = false;
   }
 };
 
-// Request interceptor - adds token and user data to headers
-const addAuthInterceptor = (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
-  const token = getAuthToken();
+// Response interceptor: on 401 try to refresh once, then retry the original request
+const createResponseInterceptor = (instance: typeof authApi) => {
+  return async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+    // Skip refresh retry for the refresh endpoint itself to avoid infinite loop
+    const isRefreshEndpoint = originalRequest?.url?.includes('/auth/refresh');
 
-  // Add user data to headers if available (useful for logging/tracing)
-  if (typeof window !== 'undefined') {
-    try {
-      const storage = localStorage.getItem('betazo-auth-storage');
-      if (storage) {
-        const parsed = JSON.parse(storage);
-        const user = parsed?.state?.user;
-        if (user?.id) {
-          config.headers['X-User-Id'] = user.id;
-        }
-        if (user?.username) {
-          config.headers['X-User-Username'] = user.username;
-        }
+    if (error.response?.status === 401 && !originalRequest._retry && !isRefreshEndpoint) {
+      originalRequest._retry = true;
+
+      const refreshed = await tryRefreshToken();
+
+      if (refreshed) {
+        return instance(originalRequest);
       }
-    } catch {
-      // Silently fail - headers are optional
-    }
-  }
 
-  return config;
-};
-
-// Response interceptor - handles 401 errors globally
-const createResponseInterceptor = () => {
-  return (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid - clear auth and redirect
+      // Refresh failed — clear local user state and redirect
       if (typeof window !== 'undefined') {
         localStorage.removeItem('betazo-auth-storage');
         window.location.href = '/';
       }
     }
+
     return Promise.reject(error);
   };
 };
 
-// Apply interceptors to all API instances (only on client side)
 if (typeof window !== 'undefined') {
-  [authApi, gatewayApi, liveOddsApi].forEach((apiInstance) => {
-    apiInstance.interceptors.request.use(addAuthInterceptor, (error) => Promise.reject(error));
-    apiInstance.interceptors.response.use((response) => response, createResponseInterceptor());
+  [authApi, gatewayApi, liveOddsApi].forEach((instance) => {
+    instance.interceptors.response.use(
+      (response) => response,
+      createResponseInterceptor(instance),
+    );
   });
 }
 
-// API instances for direct use
 export { authApi, gatewayApi, liveOddsApi };
 
-// Type definitions
 export interface AuthEndpoints {
   login(email: string, password: string): ReturnType<typeof authApi.post>;
   register(email: string, username: string, password: string): ReturnType<typeof authApi.post>;
+  logout(): ReturnType<typeof authApi.post>;
 }
 
 export interface WalletEndpoints {
@@ -109,13 +105,10 @@ export interface LiveOddsEndpoints {
   subscribe(eventId: string): ReturnType<typeof liveOddsApi.post>;
 }
 
-// Typed API endpoints
 export const authEndpoints: AuthEndpoints = {
-  login: (email: string, password: string) =>
-    authApi.post('/auth/login', { email, password }),
-
-  register: (email: string, username: string, password: string) =>
-    authApi.post('/auth/register', { email, username, password }),
+  login: (email, password) => authApi.post('/auth/login', { email, password }),
+  register: (email, username, password) => authApi.post('/auth/register', { email, username, password }),
+  logout: () => authApi.post('/auth/logout'),
 };
 
 export const walletEndpoints: WalletEndpoints = {
@@ -123,17 +116,5 @@ export const walletEndpoints: WalletEndpoints = {
 };
 
 export const liveOddsEndpoints: LiveOddsEndpoints = {
-  subscribe: (eventId: string) => liveOddsApi.post('/subscribe', { eventId }),
-};
-
-// Hook to get authenticated API instance with fresh token
-export const useAuthenticatedApi = () => {
-  const getFreshToken = (): string | null => getAuthToken();
-
-  return {
-    authApi,
-    gatewayApi,
-    liveOddsApi,
-    getFreshToken,
-  };
+  subscribe: (eventId) => liveOddsApi.post('/subscribe', { eventId }),
 };
