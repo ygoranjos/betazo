@@ -4,14 +4,22 @@ import Image from "next/image";
 import Link from "next/link";
 import logo from "/public/img/logo/logo.png";
 import { useUIStore } from "@/store";
+import { useAuth, useBalance, useLogout } from "@/hooks";
 
 const DashboardHeader = () => {
-  // Use UI store instead of local useState
   const { mobileMenuOpen, toggleMobileMenu, dashboardMenuOpen, toggleDashboardMenu } = useUIStore();
+  const { user } = useAuth();
+  const balance = useBalance();
+  const logout = useLogout();
 
   const handleDropdownClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     toggleDashboardMenu();
+  };
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = "/";
   };
 
   return (
@@ -41,7 +49,7 @@ const DashboardHeader = () => {
                 </Link>
               </li>
               <li>
-                <Link href="URL:void()" onClick={() => mobileMenuOpen && toggleMobileMenu()}>
+                <Link href="#" onClick={() => mobileMenuOpen && toggleMobileMenu()}>
                   <span>Lucky Drops</span>
                 </Link>
               </li>
@@ -64,26 +72,26 @@ const DashboardHeader = () => {
           </div>
           <div className="dashboar__wrap">
             <div className="items d__text">
-              <span className="small">Your balance</span>
-              <h6>$9.22</h6>
+              <span className="small">{user?.username ?? ""}</span>
+              <h6>{balance !== null ? `$${balance.toFixed(2)}` : "—"}</h6>
             </div>
             <div className="items d__cmn">
-              <Link href="URL:void()" className="cmn--btn">
+              <Link href="#" className="cmn--btn">
                 <span>Deposit</span>
               </Link>
             </div>
             <div className="items dashboar__social">
-              <Link href="URL:void()" className="icons">
+              <Link href="#" className="icons">
                 <i className="icon-gift"></i>
                 <span className="count">2</span>
               </Link>
-              <Link href="URL:void()" className="icons">
+              <Link href="#" className="icons">
                 <i className="icon-message"></i>
                 <span className="count">2</span>
               </Link>
               <div className="custom-dropdown" onClick={handleDropdownClick}>
                 <div className="custom-dropdown__user" data-set="custom-dropdown">
-                  <Link href="URL:void()" className="icons">
+                  <Link href="#" className="icons">
                     <i className="icon-user text-white"></i>
                   </Link>
                 </div>
@@ -99,7 +107,7 @@ const DashboardHeader = () => {
                         </Link>
                       </li>
                       <li>
-                        <Link href="URL:void()" className="custom-dropdown__body-link">
+                        <Link href="#" className="custom-dropdown__body-link">
                           <span className="custom-dropdown__body-icon">
                             <i className="fas fa-cog"></i>
                           </span>
@@ -107,12 +115,16 @@ const DashboardHeader = () => {
                         </Link>
                       </li>
                       <li>
-                        <Link href="URL:void()" className="custom-dropdown__body-link">
+                        <button
+                          onClick={handleLogout}
+                          className="custom-dropdown__body-link"
+                          style={{ background: "none", border: "none", width: "100%", textAlign: "left", padding: 0, cursor: "pointer" }}
+                        >
                           <span className="custom-dropdown__body-icon">
                             <i className="fas fa-sign-out-alt"></i>
                           </span>
                           <span className="custom-dropdown__body-text">Logout</span>
-                        </Link>
+                        </button>
                       </li>
                     </ul>
                   </div>

@@ -12,12 +12,15 @@ export interface User {
 
 interface AuthState {
   user: User | null;
+  accessToken: string | null;
+  balance: number | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
   _hasHydrated: boolean;
 
-  setAuth: (user: User) => void;
+  setAuth: (user: User, accessToken: string) => void;
+  setBalance: (balance: number | null) => void;
   logout: () => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -30,22 +33,29 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
+      accessToken: null,
+      balance: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
       _hasHydrated: false,
 
-      setAuth: (user) =>
+      setAuth: (user, accessToken) =>
         set({
           user,
+          accessToken,
           isAuthenticated: true,
           isLoading: false,
           error: null,
         }),
 
+      setBalance: (balance) => set({ balance }),
+
       logout: () =>
         set({
           user: null,
+          accessToken: null,
+          balance: null,
           isAuthenticated: false,
           isLoading: false,
           error: null,
@@ -79,6 +89,7 @@ export const useAuthStore = create<AuthState>()(
       // Only persist non-sensitive user data (no token)
       partialize: (state) => ({
         user: state.user,
+        accessToken: state.accessToken,
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {

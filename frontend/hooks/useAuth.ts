@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { authEndpoints } from '@/lib/api';
+import { useCallback, useMemo } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { authEndpoints, walletEndpoints } from '@/lib/api';
 import { useAuthStore, selectUser, selectIsAuthenticated, selectIsLoading, selectError } from '@/store';
 import { useToastStore } from '@/store';
 import type { AxiosError } from 'axios';
@@ -27,6 +27,7 @@ export interface AuthResponse {
     username: string;
     createdAt: string;
   };
+  accessToken: string;
   message?: string;
 }
 
@@ -78,7 +79,7 @@ export function useLogin() {
       setError(null);
     },
     onSuccess: (data) => {
-      setAuth(data.user);
+      setAuth(data.user, data.accessToken);
       queryClient.invalidateQueries({ queryKey: ['user'] });
     },
     onError: (error) => {
@@ -121,7 +122,7 @@ export function useRegister() {
       setError(null);
     },
     onSuccess: (data) => {
-      setAuth(data.user);
+      setAuth(data.user, data.accessToken);
       queryClient.invalidateQueries({ queryKey: ['user'] });
     },
     onError: (error) => {
@@ -155,6 +156,30 @@ export function useLogout() {
     logout();
     queryClient.clear();
   }, [logout, queryClient]);
+}
+
+// ==================== Balance Hook ====================
+
+export function useBalance() {
+  const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const setBalance = useAuthStore((state) => state.setBalance);
+  const balance = useAuthStore((state) => state.balance);
+
+  useQuery({
+    queryKey: ['wallet', 'balance'],
+    queryFn: async () => {
+      const response = await walletEndpoints.getBalance();
+      const raw = response.data?.balance;
+      const value = raw != null ? parseFloat(raw) : null;
+      setBalance(value);
+      return value;
+    },
+    enabled: isAuthenticated,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+
+  return balance;
 }
 
 // ==================== Selectors ====================

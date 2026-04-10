@@ -4,6 +4,7 @@ export {
   useLogin,
   useRegister,
   useLogout,
+  useBalance,
   useCurrentUser,
   useIsAuthenticated,
   useAuthLoading,

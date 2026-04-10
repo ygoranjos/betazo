@@ -45,7 +45,7 @@ export class AuthController {
     const { accessToken, refreshToken, user } = await this.authService.register(dto);
     res.cookie('accessToken', accessToken, ACCESS_COOKIE_OPTIONS);
     res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
-    return { user };
+    return { user, accessToken };
   }
 
   @Post('login')
@@ -57,7 +57,7 @@ export class AuthController {
     const { accessToken, refreshToken, user } = await this.authService.login(dto);
     res.cookie('accessToken', accessToken, ACCESS_COOKIE_OPTIONS);
     res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
-    return { user };
+    return { user, accessToken };
   }
 
   @Post('refresh')
