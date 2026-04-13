@@ -24,4 +24,17 @@ export class RedisService {
   async publish(channel: string, message: string): Promise<void> {
     await this.client.publish(channel, message);
   }
+
+  async keys(pattern: string): Promise<string[]> {
+    return this.client.keys(pattern);
+  }
+
+  async smembers(key: string): Promise<string[]> {
+    return this.client.smembers(key);
+  }
+
+  async mget(keys: string[]): Promise<(string | null)[]> {
+    if (keys.length === 0) return [];
+    return this.client.mget(...keys);
+  }
 }

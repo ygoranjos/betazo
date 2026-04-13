@@ -10,7 +10,7 @@ import { Server, Socket } from 'socket.io';
 import { RedisSubscriberService } from '@betazo/redis-cache';
 
 interface OddsDelta {
-  eventId: string;
+  event_id: string;
   markets: unknown[];
 }
 
@@ -26,7 +26,8 @@ export class OddsGateway implements OnModuleInit, OnGatewayConnection, OnGateway
   onModuleInit(): void {
     this.subscriber.subscribe('odds:updates', (message) => {
       const delta = JSON.parse(message) as OddsDelta;
-      this.server.to(`match:${delta.eventId}`).emit('odds_updated', delta);
+      this.server.to(`match:${delta.event_id}`).emit('odds_updated', delta);
+      this.server.to('all_matches').emit('odds_updated', delta);
     });
   }
 
@@ -40,6 +41,18 @@ export class OddsGateway implements OnModuleInit, OnGatewayConnection, OnGateway
   handleUnsubscribeMatch(client: Socket, payload: { eventId: string }): void {
     void client.leave(`match:${payload.eventId}`);
     this.logger.debug(`Client ${client.id} left match:${payload.eventId}`);
+  }
+
+  @SubscribeMessage('subscribe_all')
+  handleSubscribeAll(client: Socket): void {
+    void client.join('all_matches');
+    this.logger.debug(`Client ${client.id} subscribed to all_matches`);
+  }
+
+  @SubscribeMessage('unsubscribe_all')
+  handleUnsubscribeAll(client: Socket): void {
+    void client.leave('all_matches');
+    this.logger.debug(`Client ${client.id} unsubscribed from all_matches`);
   }
 
   handleConnection(client: Socket): void {
