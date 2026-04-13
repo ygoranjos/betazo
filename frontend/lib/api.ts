@@ -38,7 +38,7 @@ const tryRefreshToken = async (): Promise<boolean> => {
 
   isRefreshing = true;
   try {
-    await authApi.post('/auth/refresh');
+    await authApi.post('/refresh');
     notifyRefreshSubscribers(true);
     return true;
   } catch {
@@ -55,7 +55,7 @@ const createResponseInterceptor = (instance: typeof authApi) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     // Skip refresh retry for the refresh endpoint itself to avoid infinite loop
-    const isRefreshEndpoint = originalRequest?.url?.includes('/auth/refresh');
+    const isRefreshEndpoint = originalRequest?.url?.includes('/refresh');
 
     if (error.response?.status === 401 && !originalRequest._retry && !isRefreshEndpoint) {
       originalRequest._retry = true;
@@ -115,9 +115,9 @@ export interface LiveOddsEndpoints {
 }
 
 export const authEndpoints: AuthEndpoints = {
-  login: (email, password) => authApi.post('/auth/login', { email, password }),
-  register: (email, username, password) => authApi.post('/auth/register', { email, username, password }),
-  logout: () => authApi.post('/auth/logout'),
+  login: (email, password) => authApi.post('/login', { email, password }),
+  register: (email, username, password) => authApi.post('/register', { email, username, password }),
+  logout: () => authApi.post('/logout'),
 };
 
 export const walletEndpoints: WalletEndpoints = {

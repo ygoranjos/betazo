@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import type { StringValue } from 'ms';
 import { PrismaService } from '@betazo/database';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -27,7 +28,7 @@ export class AuthService {
     const accessToken = this.jwt.sign(payload);
     const refreshToken = this.jwt.sign(payload, {
       secret: process.env.JWT_REFRESH_SECRET,
-      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
+      expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN ?? '7d') as StringValue,
     });
     return { accessToken, refreshToken };
   }

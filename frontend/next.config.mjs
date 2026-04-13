@@ -12,7 +12,7 @@ const nextConfig = {
   outputFileTracingRoot: path.join(__dirname, '../'),
   async rewrites() {
     return [
-      { source: '/proxy/auth/:path*', destination: `${AUTH_URL}/:path*` },
+      { source: '/proxy/auth/:path*', destination: `${AUTH_URL}/auth/:path*` },
       { source: '/proxy/gateway/:path*', destination: `${GATEWAY_URL}/:path*` },
       { source: '/proxy/odds/:path*', destination: `${LIVE_ODDS_URL}/:path*` },
     ];
