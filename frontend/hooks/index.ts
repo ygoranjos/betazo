@@ -11,6 +11,10 @@ export {
   useAuthError,
 } from './useAuth';
 
+// Live odds hook
+export { useLiveOdds } from './useLiveOdds';
+export type { OddsDelta, OddsState, UseLiveOddsReturn } from './useLiveOdds';
+
 // Form hooks
 export { useAppForm, useFormMutation } from './useForm';
 
