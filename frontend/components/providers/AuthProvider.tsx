@@ -24,9 +24,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const { setHasHydrated } = useAuthStore();
 
   useEffect(() => {
-    setTimeout(() => {
-      setHasHydrated(true);
-    }, 100);
+    setHasHydrated(true);
   }, [setHasHydrated]);
 
   const value = {

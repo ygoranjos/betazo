@@ -1,12 +1,17 @@
-import TrendingAmericanFootballTab from "./TrendingAmericanFootballTab";
-import TrendingBasketballTab from "./TrendingBasketballTab";
-import TrendingBeachVolleyballTab from "./TrendingBeachVolleyballTab";
-import TrendingCyclingTab from "./TrendingCyclingTab";
-import TrendingFootballTab from "./TrendingFootballTab";
-import TrendingGolfTab from "./TrendingGolfTab";
-import TrendingTableTennisTab from "./TrendingTableTennisTab";
-import TrendingTennisTab from "./TrendingTennisTab";
-import TrendingVollyballTab from "./TrendingVollyballTab";
+"use client";
+
+import dynamic from "next/dynamic";
+import TrendingFootballTab from "./TrendingFootballTab"; // Sub-tab ativa — carrega imediatamente
+
+// Sub-tabs inativas: carregadas em background
+const TrendingTennisTab = dynamic(() => import("./TrendingTennisTab"), { ssr: false });
+const TrendingBasketballTab = dynamic(() => import("./TrendingBasketballTab"), { ssr: false });
+const TrendingVollyballTab = dynamic(() => import("./TrendingVollyballTab"), { ssr: false });
+const TrendingTableTennisTab = dynamic(() => import("./TrendingTableTennisTab"), { ssr: false });
+const TrendingAmericanFootballTab = dynamic(() => import("./TrendingAmericanFootballTab"), { ssr: false });
+const TrendingGolfTab = dynamic(() => import("./TrendingGolfTab"), { ssr: false });
+const TrendingCyclingTab = dynamic(() => import("./TrendingCyclingTab"), { ssr: false });
+const TrendingBeachVolleyballTab = dynamic(() => import("./TrendingBeachVolleyballTab"), { ssr: false });
 
 const Trending = () => {
   return (
