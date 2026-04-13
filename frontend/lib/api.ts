@@ -1,24 +1,21 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const AUTH_SERVICE_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:3000';
-const API_GATEWAY_URL = process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:3001';
-const LIVE_ODDS_URL = process.env.NEXT_PUBLIC_LIVE_ODDS_URL || 'http://localhost:3002';
-
-// withCredentials ensures cookies are sent automatically on every request
+// All requests go through Next.js proxy (/proxy/*) to avoid cross-origin cookie issues.
+// The proxy rewrites to the real services internally.
 const authApi = axios.create({
-  baseURL: AUTH_SERVICE_URL,
+  baseURL: '/proxy/auth',
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
 
 const gatewayApi = axios.create({
-  baseURL: API_GATEWAY_URL,
+  baseURL: '/proxy/gateway',
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
 
 const liveOddsApi = axios.create({
-  baseURL: LIVE_ODDS_URL,
+  baseURL: '/proxy/odds',
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
@@ -86,6 +83,18 @@ if (typeof window !== 'undefined') {
       (response) => response,
       createResponseInterceptor(instance),
     );
+  });
+
+  gatewayApi.interceptors.request.use((config) => {
+    const raw = localStorage.getItem('betazo-auth-storage');
+    if (raw) {
+      const parsed = JSON.parse(raw) as { state?: { accessToken?: string } };
+      const token = parsed?.state?.accessToken;
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    return config;
   });
 }
 
