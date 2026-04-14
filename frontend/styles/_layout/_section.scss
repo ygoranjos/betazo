@@ -14,6 +14,24 @@
     background: var(--header);
   }
 }
+
+@keyframes odd-flash-up {
+  0%   { background: #09ff8d; color: #060C1F; }
+  100% { background: var(--pointbox); color: inherit; }
+}
+
+@keyframes odd-flash-down {
+  0%   { background: #F3486A; color: #fff; }
+  100% { background: var(--pointbox); color: inherit; }
+}
+
+.odd--flash-up {
+  animation: odd-flash-up 1s ease-out forwards;
+}
+
+.odd--flash-down {
+  animation: odd-flash-down 1s ease-out forwards;
+}
 .spacing__initial {
   width: initial !important;
 }

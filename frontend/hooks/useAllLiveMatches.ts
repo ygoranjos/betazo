@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { matchesEndpoints } from '@/lib/api';
-import type { OddsDelta } from './useLiveOdds';
 
 export interface MatchOutcome {
   selectionId: string;
@@ -19,12 +18,18 @@ export interface MatchMarket {
 
 export interface LiveMatch {
   id: string;
+  externalId: string;
   sport: string;
   competition: string;
   homeTeam: string;
   awayTeam: string;
   startTime: string;
   status: 'pre_match' | 'live' | 'suspended' | 'settled';
+  markets: MatchMarket[];
+}
+
+interface OddsUpdatedPayload {
+  eventId: string;
   markets: MatchMarket[];
 }
 
@@ -77,24 +82,14 @@ export function useAllLiveMatches(): UseAllLiveMatchesReturn {
 
     socket.on('disconnect', () => setIsConnected(false));
 
-    socket.on('odds_updated', (delta: OddsDelta) => {
+    socket.on('odds_updated', (delta: OddsUpdatedPayload) => {
+      console.log('[odds_updated]', delta);
       setMatches((prev) =>
         prev.map((match) => {
-          if (match.id !== delta.event_id) return match;
-          return {
-            ...match,
-            markets: match.markets.map((market) => {
-              if (market.id !== delta.market_key) return market;
-              return {
-                ...market,
-                outcomes: market.outcomes.map((outcome) =>
-                  outcome.selectionId === delta.selection_id
-                    ? { ...outcome, price: delta.price }
-                    : outcome,
-                ),
-              };
-            }),
-          };
+          if (match.externalId !== delta.eventId) return match;
+          const updatedIds = new Set(delta.markets.map((m) => m.id));
+          const preserved = match.markets.filter((m) => !updatedIds.has(m.id));
+          return { ...match, markets: [...preserved, ...delta.markets] };
         }),
       );
     });

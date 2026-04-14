@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { LiveMatch } from '@/hooks';
+import { OddButton } from '@/components/common/OddButton';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -111,15 +112,15 @@ export function PreMatchRow({ match }: { match: LiveMatch }) {
         <Link href="#0" className="mart opo">
           <i className="icon-pmart"></i>
         </Link>
-        <Link href="#0box" className="point__box">{getOdds(match, 'h2h', 'home')}</Link>
-        <Link href="#0box" className="point__box">{getOdds(match, 'h2h', 'draw')}</Link>
-        <Link href="#0box" className="point__box">{getOdds(match, 'h2h', 'away')}</Link>
+        <OddButton price={getOdds(match, 'h2h', 'home')} />
+        <OddButton price={getOdds(match, 'h2h', 'draw')} />
+        <OddButton price={getOdds(match, 'h2h', 'away')} />
       </div>
       <div className="cart__point cart__point__two">-</div>
       <div className="mart__point__two">
         <div className="mart__point__left">
-          <Link href="#0" className="point__box">{getOdds(match, 'totals', 'over')}</Link>
-          <Link href="#0" className="point__box">{getOdds(match, 'totals', 'under')}</Link>
+          <OddButton price={getOdds(match, 'totals', 'over')} />
+          <OddButton price={getOdds(match, 'totals', 'under')} />
         </div>
         <div className="mart__point__right">
           <Link href="#0" className="point__box bg__none">
@@ -157,15 +158,15 @@ export function LiveMatchRow({ match }: { match: LiveMatch }) {
         <Link href="#0" className="mart">
           <i className="icon-pmart"></i>
         </Link>
-        <Link href="#0box" className="point__box">{getOdds(match, 'h2h', 'home')}</Link>
-        <Link href="#0box" className="point__box">{getOdds(match, 'h2h', 'draw')}</Link>
-        <Link href="#0box" className="point__box">{getOdds(match, 'h2h', 'away')}</Link>
+        <OddButton price={getOdds(match, 'h2h', 'home')} />
+        <OddButton price={getOdds(match, 'h2h', 'draw')} />
+        <OddButton price={getOdds(match, 'h2h', 'away')} />
       </div>
       <div className="cart__point cart__point__two">-</div>
       <div className="mart__point__two">
         <div className="mart__point__left">
-          <Link href="#0" className="point__box">{getOdds(match, 'totals', 'over')}</Link>
-          <Link href="#0" className="point__box">{getOdds(match, 'totals', 'under')}</Link>
+          <OddButton price={getOdds(match, 'totals', 'over')} />
+          <OddButton price={getOdds(match, 'totals', 'under')} />
         </div>
         <div className="mart__point__right">
           <Link href="#0" className="point__box bg__none">
