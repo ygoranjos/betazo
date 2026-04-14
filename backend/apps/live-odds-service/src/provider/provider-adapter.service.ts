@@ -175,10 +175,15 @@ export class ProviderAdapterService implements OnModuleInit, OnModuleDestroy {
 
   private handleV3Update(msg: OddsApiV3Message): void {
     if (!msg.markets || msg.markets.length === 0) return;
+    const isNew = !this.matches.has(msg.id);
     const existing = this.matches.get(msg.id) ?? ProviderMapper.createV3Match(msg.id, msg.date);
     const updated = ProviderMapper.applyV3OddsUpdate(existing, msg);
     this.matches.set(msg.id, updated);
     void this.persistMatch(updated);
+
+    if (isNew) {
+      void this.fetchFixtureForEvent(msg.id);
+    }
 
     const changedKeys = new Set(
       msg.markets
@@ -295,9 +300,22 @@ export class ProviderAdapterService implements OnModuleInit, OnModuleDestroy {
     if (events.length === 0) return;
 
     // Pass 1 — store fixture data (teams, competition, sport) for every known event.
-    // Ensures that WS updates arriving before odds are ready never create "Unknown" placeholders.
+    // Always overwrites fixture fields even if WS already created an "Unknown" placeholder.
     for (const event of events) {
-      if (!this.matches.has(event.id.toString())) {
+      const existing = this.matches.get(event.id.toString());
+      if (existing) {
+        const updated: Match = {
+          ...existing,
+          homeTeam: event.home,
+          awayTeam: event.away,
+          competition: event.league?.name ?? existing.competition,
+          sport: ProviderMapper.normalizeSport(event.sport?.slug ?? 'football'),
+          startTime: event.date,
+          status: ProviderMapper.mapRestStatus(event.status),
+        };
+        this.matches.set(updated.externalId, updated);
+        void this.persistMatch(updated);
+      } else {
         const match = ProviderMapper.mapSimpleEvent(event);
         this.matches.set(match.externalId, match);
         void this.persistMatch(match);
@@ -374,6 +392,21 @@ export class ProviderAdapterService implements OnModuleInit, OnModuleDestroy {
     }
 
     return (await res.json()) as OddsApiV3EventOdds[];
+  }
+
+  private async fetchFixtureForEvent(eventId: string): Promise<void> {
+    try {
+      const results = await this.fetchOddsMulti([parseInt(eventId, 10)]);
+      if (results.length === 0) return;
+      const existing = this.matches.get(eventId);
+      if (!existing) return;
+      const updated = ProviderMapper.applyRestOddsUpdate(existing, results[0]);
+      this.matches.set(eventId, updated);
+      void this.persistMatch(updated);
+      this.logger.debug(`Fixture resolved for event ${eventId}: ${updated.homeTeam} vs ${updated.awayTeam}`);
+    } catch (err) {
+      this.logger.warn(`Could not fetch fixture for event ${eventId}: ${String(err)}`);
+    }
   }
 
   private startPolling(): void {
