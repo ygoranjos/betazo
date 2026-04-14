@@ -13,6 +13,28 @@ const MARKET_NAME_MAP: Record<string, string> = {
   props: 'Props',
 };
 
+/**
+ * Normalizes provider sport slugs to internal sport keys used by the frontend.
+ * Provider may return 'soccer', 'table-tennis', 'ice-hockey', etc.
+ * Internal keys use underscore convention and 'football' for soccer.
+ */
+const SPORT_SLUG_MAP: Record<string, string> = {
+  soccer: 'football',
+  football: 'football',
+  basketball: 'basketball',
+  tennis: 'tennis',
+  'table-tennis': 'table_tennis',
+  tabletennis: 'table_tennis',
+  volleyball: 'volleyball',
+  cricket: 'cricket',
+  handball: 'handball',
+  'ice-hockey': 'ice_hockey',
+  icehockey: 'ice_hockey',
+  'american-football': 'american_football',
+  americanfootball: 'american_football',
+  nfl: 'american_football',
+};
+
 const REST_STATUS_MAP: Record<string, MatchStatus> = {
   live: 'live',
   inprogress: 'live',
@@ -33,6 +55,15 @@ export class ProviderMapper {
     return MARKET_NAME_MAP[marketId] ?? marketId;
   }
 
+  /**
+   * Converts a provider sport slug to the internal sport key.
+   * e.g. 'soccer' → 'football', 'table-tennis' → 'table_tennis'
+   * Unknown slugs are returned as-is (lowercased).
+   */
+  static normalizeSport(providerSlug: string): string {
+    return SPORT_SLUG_MAP[providerSlug.toLowerCase()] ?? providerSlug.toLowerCase();
+  }
+
   static epochToIso(epoch: number | undefined): string {
     if (!epoch) return new Date().toISOString();
     return new Date(epoch).toISOString();
@@ -42,7 +73,7 @@ export class ProviderMapper {
     return {
       id: ProviderMapper.generateInternalId(id),
       externalId: id,
-      sport: 'soccer',
+      sport: 'football', // default for WS-only events (no fixture data yet); overwritten by REST snapshot
       competition: 'Unknown',
       homeTeam: 'Unknown',
       awayTeam: 'Unknown',
@@ -53,12 +84,20 @@ export class ProviderMapper {
   }
 
   static mapV3MarketKey(providerName: string): string | null {
-    const name = providerName.toLowerCase();
+    const name = providerName.toLowerCase().trim();
+    // Head-to-head / winner market — covers both 2-way (tennis, basketball) and 3-way (football)
     if (
       name === 'ml' ||
       name === 'moneyline' ||
+      name === '2way' ||
+      name === 'winner' ||
+      name === 'match winner' ||
+      name === 'match result' ||
+      name === '1x2' ||
+      name.includes('2-way') ||
       name.includes('3-way') ||
-      name.includes('money line')
+      name.includes('money line') ||
+      name.includes('home/away')
     )
       return 'h2h';
     if (name.includes('total') || name.includes('over/under')) return 'totals';
@@ -167,7 +206,7 @@ export class ProviderMapper {
     return {
       id: ProviderMapper.generateInternalId(event.id.toString()),
       externalId: event.id.toString(),
-      sport: event.sport?.slug ?? 'soccer',
+      sport: ProviderMapper.normalizeSport(event.sport?.slug ?? 'football'),
       competition: event.league?.name ?? 'Unknown',
       homeTeam: event.home,
       awayTeam: event.away,
