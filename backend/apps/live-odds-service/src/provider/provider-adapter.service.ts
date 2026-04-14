@@ -294,17 +294,6 @@ export class ProviderAdapterService implements OnModuleInit, OnModuleDestroy {
     const events = await this.fetchEvents(sport);
     if (events.length === 0) return;
 
-    // Pass 1 — store fixture data (teams, competition, sport) for every known event.
-    // Ensures that WS updates arriving before odds are ready never create "Unknown" placeholders.
-    for (const event of events) {
-      if (!this.matches.has(event.id.toString())) {
-        const match = ProviderMapper.mapSimpleEvent(event);
-        this.matches.set(match.externalId, match);
-        void this.persistMatch(match);
-      }
-    }
-
-    // Pass 2 — fetch odds and overlay them on the already-stored fixtures.
     const BATCH_SIZE = 10;
     for (let i = 0; i < events.length; i += BATCH_SIZE) {
       const batch = events.slice(i, i + BATCH_SIZE);

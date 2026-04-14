@@ -124,10 +124,6 @@ export const walletEndpoints: WalletEndpoints = {
   getBalance: () => gatewayApi.get('/wallet/balance'),
 };
 
-export const matchesEndpoints = {
-  getActive: () => gatewayApi.get('/matches'),
-};
-
 export const liveOddsEndpoints: LiveOddsEndpoints = {
   subscribe: (eventId) => liveOddsApi.post('/subscribe', { eventId }),
 };
