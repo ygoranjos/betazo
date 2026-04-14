@@ -1,17 +1,22 @@
+"use client";
+
+import dynamic from "next/dynamic";
 import PopularEvents from "../common/PopularEvents";
-import AmericanTab from "./AmericanTab";
-import BaseballTab from "./BaseballTab";
-import BasketballTab from "./BasketballTab";
-import FootballTab from "./FootballTab";
-import FovatiresTab from "./FovatiresTab";
-import HandballTab from "./HandballTab";
-import HomeTab from "./HomeTab";
-import HorseRacingTab from "./HorseRacingTab";
-import IceHockeyTab from "./IceHockeyTab";
-import LiveTab from "./LiveTab";
-import TennisTab from "./TennisTab";
-import TodayTab from "./TodayTab";
-import VirtualTab from "./VirtualTab";
+import HomeTab from "./HomeTab"; // Tab ativa — carrega imediatamente
+
+// Tabs inativas: carregadas em background após o render inicial
+const LiveTab = dynamic(() => import("./LiveTab"), { ssr: false });
+const TodayTab = dynamic(() => import("./TodayTab"), { ssr: false });
+const FootballTab = dynamic(() => import("./FootballTab"), { ssr: false });
+const TennisTab = dynamic(() => import("./TennisTab"), { ssr: false });
+const BasketballTab = dynamic(() => import("./BasketballTab"), { ssr: false });
+const IceHockeyTab = dynamic(() => import("./IceHockeyTab"), { ssr: false });
+const HandballTab = dynamic(() => import("./HandballTab"), { ssr: false });
+const AmericanTab = dynamic(() => import("./AmericanTab"), { ssr: false });
+const BaseballTab = dynamic(() => import("./BaseballTab"), { ssr: false });
+const HorseRacingTab = dynamic(() => import("./HorseRacingTab"), { ssr: false });
+const VirtualTab = dynamic(() => import("./VirtualTab"), { ssr: false });
+const FovatiresTab = dynamic(() => import("./FovatiresTab"), { ssr: false });
 
 const GlobalMain = () => {
   return (

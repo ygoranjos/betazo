@@ -1,4 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { useAuthStore } from '@/store';
 
 // All requests go through Next.js proxy (/proxy/*) to avoid cross-origin cookie issues.
 // The proxy rewrites to the real services internally.
@@ -86,13 +87,9 @@ if (typeof window !== 'undefined') {
   });
 
   gatewayApi.interceptors.request.use((config) => {
-    const raw = localStorage.getItem('betazo-auth-storage');
-    if (raw) {
-      const parsed = JSON.parse(raw) as { state?: { accessToken?: string } };
-      const token = parsed?.state?.accessToken;
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+    const token = useAuthStore.getState().accessToken;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   });
