@@ -26,6 +26,40 @@ export function formatTime(iso: string): string {
   }
 }
 
+/**
+ * Returns a human-readable date+time label for a match start time.
+ * - Same calendar day  → "Hoje / 21:00"
+ * - Next calendar day  → "Amanhã / 21:00"
+ * - Within 7 days      → "Sáb / 21:00"
+ * - Further out        → "18/04 / 21:00"
+ */
+export function formatMatchDate(iso: string): string {
+  try {
+    const match = new Date(iso);
+    const now = new Date();
+
+    // Strip time — compare calendar dates only
+    const matchDay = new Date(match.getFullYear(), match.getMonth(), match.getDate());
+    const today    = new Date(now.getFullYear(),   now.getMonth(),   now.getDate());
+    const diffDays = Math.round((matchDay.getTime() - today.getTime()) / 86_400_000);
+
+    const time = match.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    if (diffDays === 0) return `Hoje / ${time}`;
+    if (diffDays === 1) return `Amanhã / ${time}`;
+    if (diffDays > 1 && diffDays < 7) {
+      const weekday = match.toLocaleDateString('pt-BR', { weekday: 'short' });
+      // Capitalize first letter, remove trailing dot  (e.g. "sáb." → "Sáb")
+      const label = weekday.charAt(0).toUpperCase() + weekday.slice(1).replace('.', '');
+      return `${label} / ${time}`;
+    }
+    const date = match.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    return `${date} / ${time}`;
+  } catch {
+    return '--/-- / --:--';
+  }
+}
+
 // ─── Empty / Loading states ──────────────────────────────────────────────────
 
 export function LoadingRow() {
@@ -65,7 +99,7 @@ export function PreMatchRow({ match }: { match: LiveMatch }) {
           <p>
             <Link href="#0" style={teamCellStyle}>{match.competition}</Link>
             <Link href="#0" className="today">
-              Hoje / {formatTime(match.startTime)}
+              {formatMatchDate(match.startTime)}
             </Link>
           </p>
         </div>
@@ -176,7 +210,7 @@ export function NextToGoRow({ match }: { match: LiveMatch }) {
         </div>
         <div className="mart__point__right">
           <Link href="#0" className="point__box-text point__box__nextto">
-            <span>Hoje / {formatTime(match.startTime)}</span>
+            <span>{formatMatchDate(match.startTime)}</span>
             <span className="icons">
               <i className="fas fa-angle-right"></i>
             </span>
