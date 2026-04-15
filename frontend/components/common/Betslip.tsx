@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useBetslipStore } from '@/store';
+import { useEffect, useState } from 'react';
+import { useBetslipStore, selectTotalOdds, selectPotentialReturn } from '@/store';
 import { useIsAuthenticated } from '@/store';
 import type { BetslipSelection } from '@/store';
 
@@ -154,7 +154,9 @@ function SelectionItem({
 type TabType = 'single' | 'multiple' | 'system';
 
 const Betslip = () => {
-  const { selections, removeSelection, clearBetslip } = useBetslipStore();
+  const { selections, removeSelection, clearBetslip, multipleStake, setMultipleStake } = useBetslipStore();
+  const totalOdds = useBetslipStore(selectTotalOdds);
+  const potentialReturn = useBetslipStore(selectPotentialReturn);
   const isAuthenticated = useIsAuthenticated();
 
   const [activeTab, setActiveTab] = useState<TabType>('multiple');
@@ -162,15 +164,29 @@ const Betslip = () => {
   // Single: stake por selectionId
   const [singleStakes, setSingleStakes] = useState<Record<string, number>>({});
 
-  // Multiple e System: stake único compartilhado
+  // Multiple: estado local controla o display; useEffect sincroniza com o store
+  // (evita conflito entre useSyncExternalStore do Zustand e state local do input)
+  const [multipleStakeInput, setMultipleStakeInput] = useState('');
+
+  useEffect(() => {
+    const parsed = parseFloat(multipleStakeInput);
+    setMultipleStake(isNaN(parsed) || parsed < 0 ? 0 : parsed);
+  }, [multipleStakeInput]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // System: stake único local
   const [sharedStake, setSharedStake] = useState(0);
 
   function switchTab(tab: TabType) {
     if (tab === activeTab) return;
     clearBetslip();
     setSingleStakes({});
+    setMultipleStakeInput('');
     setSharedStake(0);
     setActiveTab(tab);
+  }
+
+  function handleMultipleQuickStake(v: number) {
+    setMultipleStakeInput(v.toString());
   }
 
   function setSingleStake(selectionId: string, value: number) {
@@ -178,15 +194,10 @@ const Betslip = () => {
   }
 
   const singleTotalStake = selections.reduce((acc, s) => acc + (singleStakes[s.selectionId] ?? 0), 0);
-  const singleTotalPayout = selections.reduce(
-    (acc, s) => acc + (singleStakes[s.selectionId] ?? 0) * s.currentOdd,
-    0,
-  );
   const singleCanBet = selections.length > 0 && singleTotalStake > 0;
 
-  const multipleOdds = selections.reduce((acc, s) => acc * s.currentOdd, 1);
-  const multiplePayout = sharedStake * multipleOdds;
-  const multipleCanBet = selections.length > 0 && sharedStake > 0;
+  // Multiple — calculado pelos seletores do store (totalOdds, potentialReturn)
+  const multipleCanBet = selections.length > 0 && multipleStake > 0;
 
   const systemCombinations = combinations(selections.length, 2);
   const systemTotalStake = sharedStake * systemCombinations;
@@ -251,23 +262,48 @@ const Betslip = () => {
                 <div className="total__odds">
                   <div className="total__head">
                     <h6 className="odd">Total Odds</h6>
-                    <span>{multipleOdds.toFixed(2)}</span>
+                    <span>{totalOdds.toFixed(2)}</span>
                   </div>
                   <div className="wrapper">
-                    <div className="result">
-                      <span>Stake amount, $</span>
-                      <span className="result">{sharedStake.toFixed(2)} $</span>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      background: 'var(--signbet)',
+                      borderRadius: '6px',
+                      padding: '0.5rem 0.75rem',
+                      margin: '0.5rem 0',
+                      border: '1px solid var(--multiborder)',
+                    }}>
+                      <span style={{ color: 'var(--textcolor)', fontSize: '0.85rem', flexShrink: 0 }}>$</span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={multipleStakeInput}
+                        onChange={(e) => setMultipleStakeInput(e.target.value.replace(/[^0-9.]/g, ''))}
+                        placeholder="Stake amount"
+                        style={{
+                          flex: 1,
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'var(--white)',
+                          caretColor: 'var(--active-color)',
+                          outline: 'none',
+                          fontSize: '0.9rem',
+                          minWidth: 0,
+                        }}
+                      />
                     </div>
                     <div className="buttons">
                       {[5, 10, 50].map((v) => (
-                        <button key={v} type="button" onClick={() => setSharedStake(v)}>{v}</button>
+                        <button key={v} type="button" onClick={() => handleMultipleQuickStake(v)}>{v}</button>
                       ))}
                     </div>
                   </div>
                 </div>
                 <div className="possible__pay">
                   <span>Possible Payout</span>
-                  <span>{multiplePayout.toFixed(2)} $</span>
+                  <span>{potentialReturn.toFixed(2)} $</span>
                 </div>
                 <ActionButton canBet={multipleCanBet} isAuthenticated={isAuthenticated} />
               </div>

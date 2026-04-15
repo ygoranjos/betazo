@@ -15,13 +15,17 @@ export interface BetslipSelection {
 
 interface BetslipState {
   selections: BetslipSelection[];
+  multipleStake: number;
+
   toggleSelection: (selection: BetslipSelection) => void;
   removeSelection: (selectionId: string) => void;
+  setMultipleStake: (stake: number) => void;
   clearBetslip: () => void;
 }
 
 export const useBetslipStore = create<BetslipState>()((set) => ({
   selections: [],
+  multipleStake: 0,
 
   toggleSelection: (selection) =>
     set((state) => {
@@ -41,5 +45,19 @@ export const useBetslipStore = create<BetslipState>()((set) => ({
       selections: state.selections.filter((s) => s.selectionId !== selectionId),
     })),
 
-  clearBetslip: () => set({ selections: [] }),
+  setMultipleStake: (stake) => set({ multipleStake: stake }),
+
+  clearBetslip: () => set({ selections: [], multipleStake: 0 }),
 }));
+
+// ─── Seletores de cálculo do Multiple ────────────────────────────────────────
+
+/** Produto de todas as odds individuais. Retorna 0 se não há seleções. */
+export const selectTotalOdds = (state: BetslipState): number =>
+  state.selections.length === 0
+    ? 0
+    : state.selections.reduce((acc, s) => acc * s.currentOdd, 1);
+
+/** Retorno potencial = Odd Total × Valor Apostado. */
+export const selectPotentialReturn = (state: BetslipState): number =>
+  selectTotalOdds(state) * state.multipleStake;
