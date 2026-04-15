@@ -131,6 +131,17 @@ function SingleSelectionItem({
   onRemove: () => void;
   onAcceptOdd: () => void;
 }) {
+  const [stakeInput, setStakeInput] = useState('');
+
+  useEffect(() => {
+    const parsed = parseFloat(stakeInput);
+    onStakeChange(isNaN(parsed) || parsed < 0 ? 0 : parsed);
+  }, [stakeInput]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function handleQuickStake(v: number) {
+    setStakeInput(v.toString());
+  }
+
   const payout = stake * selection.currentOdd;
   const isStale = selection.newOdd !== undefined;
   return (
@@ -162,13 +173,38 @@ function SingleSelectionItem({
       </div>
       <div className="total__odds">
         <div className="wrapper">
-          <div className="result">
-            <span>Stake amount, $</span>
-            <span className="result">{stake.toFixed(2)} $</span>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            background: 'var(--signbet)',
+            borderRadius: '6px',
+            padding: '0.5rem 0.75rem',
+            margin: '0.5rem 0',
+            border: '1px solid var(--multiborder)',
+          }}>
+            <span style={{ color: 'var(--textcolor)', fontSize: '0.85rem', flexShrink: 0 }}>$</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={stakeInput}
+              onChange={(e) => setStakeInput(e.target.value.replace(/[^0-9.]/g, ''))}
+              placeholder="Stake amount"
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--white)',
+                caretColor: 'var(--active-color)',
+                outline: 'none',
+                fontSize: '0.9rem',
+                minWidth: 0,
+              }}
+            />
           </div>
           <div className="buttons">
             {[5, 10, 50].map((v) => (
-              <button key={v} type="button" onClick={() => onStakeChange(v)}>{v}</button>
+              <button key={v} type="button" onClick={() => handleQuickStake(v)}>{v}</button>
             ))}
           </div>
         </div>
@@ -247,12 +283,19 @@ const Betslip = () => {
 
   // System: stake único local
   const [sharedStake, setSharedStake] = useState(0);
+  const [sharedStakeInput, setSharedStakeInput] = useState('');
+
+  useEffect(() => {
+    const parsed = parseFloat(sharedStakeInput);
+    setSharedStake(isNaN(parsed) || parsed < 0 ? 0 : parsed);
+  }, [sharedStakeInput]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function switchTab(tab: TabType) {
     if (tab === activeTab) return;
     clearBetslip();
     setSingleStakes({});
     setMultipleStakeInput('');
+    setSharedStakeInput('');
     setSharedStake(0);
     setActiveTab(tab);
   }
@@ -278,7 +321,28 @@ const Betslip = () => {
   return (
     <div className="right__site__section display991">
       <div className="betslip__wrap">
-        <h5 className="betslip__title">Betslip</h5>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+          <h5 className="betslip__title" style={{ margin: 0 }}>Betslip</h5>
+          {selections.length > 0 && (
+            <button
+              type="button"
+              onClick={() => { clearBetslip(); setSingleStakes({}); setMultipleStakeInput(''); setSharedStakeInput(''); setSharedStake(0); }}
+              style={{
+                background: 'none',
+                border: '1px solid var(--button-one)',
+                borderRadius: '4px',
+                color: 'var(--button-one)',
+                fontSize: '0.72rem',
+                fontWeight: 600,
+                padding: '0.2rem 0.6rem',
+                cursor: 'pointer',
+                letterSpacing: '0.02em',
+              }}
+            >
+              Clear All
+            </button>
+          )}
+        </div>
         <div className="nav" id="nav-taboo" role="tablist">
           {(['single', 'multiple', 'system'] as TabType[]).map((tab) => (
             <button
@@ -407,13 +471,38 @@ const Betslip = () => {
                     <span>{systemCombinations} combinações</span>
                   </div>
                   <div className="wrapper">
-                    <div className="result">
-                      <span>Stake por combinação, $</span>
-                      <span className="result">{sharedStake.toFixed(2)} $</span>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      background: 'var(--signbet)',
+                      borderRadius: '6px',
+                      padding: '0.5rem 0.75rem',
+                      margin: '0.5rem 0',
+                      border: '1px solid var(--multiborder)',
+                    }}>
+                      <span style={{ color: 'var(--textcolor)', fontSize: '0.85rem', flexShrink: 0 }}>$</span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={sharedStakeInput}
+                        onChange={(e) => setSharedStakeInput(e.target.value.replace(/[^0-9.]/g, ''))}
+                        placeholder="Stake amount"
+                        style={{
+                          flex: 1,
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'var(--white)',
+                          caretColor: 'var(--active-color)',
+                          outline: 'none',
+                          fontSize: '0.9rem',
+                          minWidth: 0,
+                        }}
+                      />
                     </div>
                     <div className="buttons">
                       {[5, 10, 50].map((v) => (
-                        <button key={v} type="button" onClick={() => setSharedStake(v)}>{v}</button>
+                        <button key={v} type="button" onClick={() => setSharedStakeInput(v.toString())}>{v}</button>
                       ))}
                     </div>
                   </div>
