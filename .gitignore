@@ -40,3 +40,10 @@ ARQUITETURA.md
 
 .claude
 .next
+
+# IDE
+.idea/
+
+# Claude Code
+.ai/
+mcp.json
