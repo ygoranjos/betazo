@@ -16,7 +16,7 @@ export type { User } from './authStore';
 export { useUIStore } from './uiStore';
 
 // Betslip store
-export { useBetslipStore, selectTotalOdds, selectPotentialReturn } from './betslipStore';
+export { useBetslipStore, selectTotalOdds, selectPotentialReturn, selectHasStaleOdds } from './betslipStore';
 export type { BetslipSelection } from './betslipStore';
 
 // Toast store

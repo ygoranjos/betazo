@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useBetslipStore, selectTotalOdds, selectPotentialReturn } from '@/store';
+import { useBetslipStore, selectTotalOdds, selectPotentialReturn, selectHasStaleOdds } from '@/store';
 import { useIsAuthenticated } from '@/store';
 import type { BetslipSelection } from '@/store';
+import { useBetslipOddsSync } from '@/hooks';
 
 const SPORT_ICONS: Record<string, string> = {
   soccer: 'icon-football',
@@ -37,7 +38,15 @@ function EmptyState() {
   );
 }
 
-function ActionButton({ canBet, isAuthenticated }: { canBet: boolean; isAuthenticated: boolean }) {
+function ActionButton({
+  canBet,
+  isAuthenticated,
+  hasStaleOdds,
+}: {
+  canBet: boolean;
+  isAuthenticated: boolean;
+  hasStaleOdds: boolean;
+}) {
   if (!isAuthenticated) {
     return (
       <button type="button" className="cmn--btn2" style={{ width: '100%', border: 'none', cursor: 'pointer' }}>
@@ -45,15 +54,67 @@ function ActionButton({ canBet, isAuthenticated }: { canBet: boolean; isAuthenti
       </button>
     );
   }
+
+  const disabled = !canBet || hasStaleOdds;
+  const label = hasStaleOdds ? 'Accept changed odds' : 'Place Bet';
+
   return (
     <button
       type="button"
       className="cmn--btn2"
-      disabled={!canBet}
-      style={{ width: '100%', border: 'none', cursor: canBet ? 'pointer' : 'not-allowed', opacity: canBet ? 1 : 0.5 }}
+      disabled={disabled}
+      style={{ width: '100%', border: 'none', cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1 }}
     >
-      <span>Place Bet</span>
+      <span>{label}</span>
     </button>
+  );
+}
+
+function OddChangedWarning({
+  selection,
+  onAccept,
+}: {
+  selection: BetslipSelection;
+  onAccept: () => void;
+}) {
+  if (selection.newOdd === undefined) return null;
+  const increased = selection.newOdd > selection.currentOdd;
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      background: 'rgba(243, 72, 106, 0.12)',
+      border: '1px solid var(--button-one)',
+      borderRadius: '4px',
+      padding: '0.4rem 0.6rem',
+      margin: '0.4rem 0',
+      gap: '0.5rem',
+    }}>
+      <span style={{ fontSize: '0.78rem', color: 'var(--button-one)' }}>
+        ⚠ Odd changed: {selection.currentOdd.toFixed(2)} →{' '}
+        <strong style={{ color: increased ? 'var(--active-color)' : 'var(--button-one)' }}>
+          {selection.newOdd.toFixed(2)}
+        </strong>
+      </span>
+      <button
+        type="button"
+        onClick={onAccept}
+        style={{
+          background: 'var(--active-color)',
+          border: 'none',
+          borderRadius: '3px',
+          color: 'var(--body-color)',
+          fontSize: '0.72rem',
+          fontWeight: 700,
+          padding: '0.2rem 0.5rem',
+          cursor: 'pointer',
+          flexShrink: 0,
+        }}
+      >
+        Accept
+      </button>
+    </div>
   );
 }
 
@@ -62,16 +123,19 @@ function SingleSelectionItem({
   stake,
   onStakeChange,
   onRemove,
+  onAcceptOdd,
 }: {
   selection: BetslipSelection;
   stake: number;
   onStakeChange: (v: number) => void;
   onRemove: () => void;
+  onAcceptOdd: () => void;
 }) {
   const payout = stake * selection.currentOdd;
+  const isStale = selection.newOdd !== undefined;
   return (
     <>
-      <div className="multiple__items">
+      <div className="multiple__items" style={isStale ? { borderLeft: '2px solid var(--button-one)' } : {}}>
         <div className="multiple__head">
           <div className="multiple__left">
             <span className="icons"><i className={getSportIcon(selection.sport)}></i></span>
@@ -94,6 +158,7 @@ function SingleSelectionItem({
             <span className="point">{selection.betType}</span>
           </span>
         </div>
+        <OddChangedWarning selection={selection} onAccept={onAcceptOdd} />
       </div>
       <div className="total__odds">
         <div className="wrapper">
@@ -119,12 +184,15 @@ function SingleSelectionItem({
 function SelectionItem({
   selection,
   onRemove,
+  onAcceptOdd,
 }: {
   selection: BetslipSelection;
   onRemove: () => void;
+  onAcceptOdd: () => void;
 }) {
+  const isStale = selection.newOdd !== undefined;
   return (
-    <div className="multiple__items">
+    <div className="multiple__items" style={isStale ? { borderLeft: '2px solid var(--button-one)' } : {}}>
       <div className="multiple__head">
         <div className="multiple__left">
           <span className="icons"><i className={getSportIcon(selection.sport)}></i></span>
@@ -147,6 +215,7 @@ function SelectionItem({
           <span className="point">{selection.betType}</span>
         </span>
       </div>
+      <OddChangedWarning selection={selection} onAccept={onAcceptOdd} />
     </div>
   );
 }
@@ -154,10 +223,13 @@ function SelectionItem({
 type TabType = 'single' | 'multiple' | 'system';
 
 const Betslip = () => {
-  const { selections, removeSelection, clearBetslip, multipleStake, setMultipleStake } = useBetslipStore();
-  const totalOdds = useBetslipStore(selectTotalOdds);
+  const { selections, removeSelection, clearBetslip, multipleStake, setMultipleStake, acceptOdd } = useBetslipStore();
+  const totalOdds      = useBetslipStore(selectTotalOdds);
   const potentialReturn = useBetslipStore(selectPotentialReturn);
+  const hasStaleOdds   = useBetslipStore(selectHasStaleOdds);
   const isAuthenticated = useIsAuthenticated();
+
+  useBetslipOddsSync();
 
   const [activeTab, setActiveTab] = useState<TabType>('multiple');
 
@@ -241,9 +313,10 @@ const Betslip = () => {
                     stake={singleStakes[s.selectionId] ?? 0}
                     onStakeChange={(v) => setSingleStake(s.selectionId, v)}
                     onRemove={() => removeSelection(s.selectionId)}
+                    onAcceptOdd={() => acceptOdd(s.selectionId)}
                   />
                 ))}
-                <ActionButton canBet={singleCanBet} isAuthenticated={isAuthenticated} />
+                <ActionButton canBet={singleCanBet} isAuthenticated={isAuthenticated} hasStaleOdds={hasStaleOdds} />
               </div>
             )}
           </div>
@@ -257,7 +330,7 @@ const Betslip = () => {
             ) : (
               <div className="multiple__components">
                 {selections.map((s) => (
-                  <SelectionItem key={s.selectionId} selection={s} onRemove={() => removeSelection(s.selectionId)} />
+                  <SelectionItem key={s.selectionId} selection={s} onRemove={() => removeSelection(s.selectionId)} onAcceptOdd={() => acceptOdd(s.selectionId)} />
                 ))}
                 <div className="total__odds">
                   <div className="total__head">
@@ -305,7 +378,7 @@ const Betslip = () => {
                   <span>Possible Payout</span>
                   <span>{potentialReturn.toFixed(2)} $</span>
                 </div>
-                <ActionButton canBet={multipleCanBet} isAuthenticated={isAuthenticated} />
+                <ActionButton canBet={multipleCanBet} isAuthenticated={isAuthenticated} hasStaleOdds={hasStaleOdds} />
               </div>
             )}
           </div>
@@ -326,7 +399,7 @@ const Betslip = () => {
             ) : (
               <div className="multiple__components">
                 {selections.map((s) => (
-                  <SelectionItem key={s.selectionId} selection={s} onRemove={() => removeSelection(s.selectionId)} />
+                  <SelectionItem key={s.selectionId} selection={s} onRemove={() => removeSelection(s.selectionId)} onAcceptOdd={() => acceptOdd(s.selectionId)} />
                 ))}
                 <div className="total__odds">
                   <div className="total__head">
@@ -351,9 +424,9 @@ const Betslip = () => {
                 </div>
                 <div className="possible__pay">
                   <span>Payout máximo</span>
-                  <span>{(sharedStake * multipleOdds).toFixed(2)} $</span>
+                  <span>{(sharedStake * totalOdds).toFixed(2)} $</span>
                 </div>
-                <ActionButton canBet={systemCanBet} isAuthenticated={isAuthenticated} />
+                <ActionButton canBet={systemCanBet} isAuthenticated={isAuthenticated} hasStaleOdds={hasStaleOdds} />
               </div>
             )}
           </div>
