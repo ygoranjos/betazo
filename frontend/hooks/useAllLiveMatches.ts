@@ -83,7 +83,6 @@ export function useAllLiveMatches(): UseAllLiveMatchesReturn {
     socket.on('disconnect', () => setIsConnected(false));
 
     socket.on('odds_updated', (delta: OddsUpdatedPayload) => {
-      console.log('[odds_updated]', delta);
       setMatches((prev) =>
         prev.map((match) => {
           if (match.externalId !== delta.eventId) return match;

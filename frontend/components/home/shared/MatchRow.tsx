@@ -1,6 +1,10 @@
+'use client';
+
 import Link from 'next/link';
 import type { LiveMatch } from '@/hooks';
 import { OddButton } from '@/components/common/OddButton';
+import type { BetslipSelection } from '@/store';
+import { useBetslipStore } from '@/store';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -14,6 +18,27 @@ export function getOdds(
     o.selectionId.endsWith(`:${side}`),
   );
   return outcome?.price != null ? outcome.price.toFixed(2) : '-';
+}
+
+/** Retorna os dados de seleção para um outcome específico, ou undefined se não existir. */
+function buildSelection(
+  match: LiveMatch,
+  marketKey: string,
+  side: string,
+  betType: string,
+): Omit<BetslipSelection, 'currentOdd'> | undefined {
+  const market = match.markets.find((m) => m.id === marketKey);
+  const outcome = market?.outcomes.find((o) => o.selectionId.endsWith(`:${side}`));
+  if (!outcome) return undefined;
+  return {
+    selectionId: outcome.selectionId,
+    matchId: match.id,
+    marketId: marketKey,
+    matchLabel: `${match.homeTeam} vs ${match.awayTeam}`,
+    teamName: outcome.name,
+    betType,
+    sport: match.sport,
+  };
 }
 
 export function formatTime(iso: string): string {
@@ -112,15 +137,30 @@ export function PreMatchRow({ match }: { match: LiveMatch }) {
         <Link href="#0" className="mart opo">
           <i className="icon-pmart"></i>
         </Link>
-        <OddButton price={getOdds(match, 'h2h', 'home')} />
-        <OddButton price={getOdds(match, 'h2h', 'draw')} />
-        <OddButton price={getOdds(match, 'h2h', 'away')} />
+        <OddButton
+          price={getOdds(match, 'h2h', 'home')}
+          selection={buildSelection(match, 'h2h', 'home', '1x2')}
+        />
+        <OddButton
+          price={getOdds(match, 'h2h', 'draw')}
+          selection={buildSelection(match, 'h2h', 'draw', '1x2')}
+        />
+        <OddButton
+          price={getOdds(match, 'h2h', 'away')}
+          selection={buildSelection(match, 'h2h', 'away', '1x2')}
+        />
       </div>
       <div className="cart__point cart__point__two">-</div>
       <div className="mart__point__two">
         <div className="mart__point__left">
-          <OddButton price={getOdds(match, 'totals', 'over')} />
-          <OddButton price={getOdds(match, 'totals', 'under')} />
+          <OddButton
+            price={getOdds(match, 'totals', 'over')}
+            selection={buildSelection(match, 'totals', 'over', 'Over/Under')}
+          />
+          <OddButton
+            price={getOdds(match, 'totals', 'under')}
+            selection={buildSelection(match, 'totals', 'under', 'Over/Under')}
+          />
         </div>
         <div className="mart__point__right">
           <Link href="#0" className="point__box bg__none">
@@ -158,15 +198,30 @@ export function LiveMatchRow({ match }: { match: LiveMatch }) {
         <Link href="#0" className="mart">
           <i className="icon-pmart"></i>
         </Link>
-        <OddButton price={getOdds(match, 'h2h', 'home')} />
-        <OddButton price={getOdds(match, 'h2h', 'draw')} />
-        <OddButton price={getOdds(match, 'h2h', 'away')} />
+        <OddButton
+          price={getOdds(match, 'h2h', 'home')}
+          selection={buildSelection(match, 'h2h', 'home', '1x2')}
+        />
+        <OddButton
+          price={getOdds(match, 'h2h', 'draw')}
+          selection={buildSelection(match, 'h2h', 'draw', '1x2')}
+        />
+        <OddButton
+          price={getOdds(match, 'h2h', 'away')}
+          selection={buildSelection(match, 'h2h', 'away', '1x2')}
+        />
       </div>
       <div className="cart__point cart__point__two">-</div>
       <div className="mart__point__two">
         <div className="mart__point__left">
-          <OddButton price={getOdds(match, 'totals', 'over')} />
-          <OddButton price={getOdds(match, 'totals', 'under')} />
+          <OddButton
+            price={getOdds(match, 'totals', 'over')}
+            selection={buildSelection(match, 'totals', 'over', 'Over/Under')}
+          />
+          <OddButton
+            price={getOdds(match, 'totals', 'under')}
+            selection={buildSelection(match, 'totals', 'under', 'Over/Under')}
+          />
         </div>
         <div className="mart__point__right">
           <Link href="#0" className="point__box bg__none">
@@ -181,6 +236,22 @@ export function LiveMatchRow({ match }: { match: LiveMatch }) {
 // ─── Next-to-go (1X2 inline) ────────────────────────────────────────────────
 
 export function NextToGoRow({ match }: { match: LiveMatch }) {
+  const { toggleSelection, selections } = useBetslipStore();
+
+  function handleOddClick(e: React.MouseEvent, side: string, label: string) {
+    e.preventDefault();
+    const sel = buildSelection(match, 'h2h', side, '1x2');
+    const price = getOdds(match, 'h2h', side);
+    if (!sel || price === '-') return;
+    toggleSelection({ ...sel, currentOdd: parseFloat(price) });
+  }
+
+  function isSelected(side: string): boolean {
+    const market = match.markets.find((m) => m.id === 'h2h');
+    const outcome = market?.outcomes.find((o) => o.selectionId.endsWith(`:${side}`));
+    return outcome ? selections.some((s) => s.selectionId === outcome.selectionId) : false;
+  }
+
   return (
     <div className="table__items b__bottom">
       <div className="t__items">
@@ -196,18 +267,30 @@ export function NextToGoRow({ match }: { match: LiveMatch }) {
       </div>
       <div className="mart__point__two mart__pint__nextgo">
         <div className="mart__point__left">
-          <Link href="#0" className="point__box">
+          <a
+            href="#0"
+            className={`point__box${isSelected('home') ? ' active' : ''}`}
+            onClick={(e) => handleOddClick(e, 'home', '1')}
+          >
             <span className="point__1">1</span>
             <span>{getOdds(match, 'h2h', 'home')}</span>
-          </Link>
-          <Link href="#0" className="point__box">
+          </a>
+          <a
+            href="#0"
+            className={`point__box${isSelected('draw') ? ' active' : ''}`}
+            onClick={(e) => handleOddClick(e, 'draw', 'X')}
+          >
             <span className="point__1">X</span>
             <span>{getOdds(match, 'h2h', 'draw')}</span>
-          </Link>
-          <Link href="#0" className="point__box">
+          </a>
+          <a
+            href="#0"
+            className={`point__box${isSelected('away') ? ' active' : ''}`}
+            onClick={(e) => handleOddClick(e, 'away', '2')}
+          >
             <span className="point__1">2</span>
             <span>{getOdds(match, 'h2h', 'away')}</span>
-          </Link>
+          </a>
         </div>
         <div className="mart__point__right">
           <Link href="#0" className="point__box-text point__box__nextto">

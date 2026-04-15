@@ -1,14 +1,21 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useBetslipStore, type BetslipSelection } from '@/store';
 
 interface OddButtonProps {
   price: string;
+  selection?: Omit<BetslipSelection, 'currentOdd'>;
 }
 
-export function OddButton({ price }: OddButtonProps) {
+export function OddButton({ price, selection }: OddButtonProps) {
   const prevPrice = useRef<string | null>(null);
   const [flash, setFlash] = useState<'up' | 'down' | null>(null);
+  const { toggleSelection, selections } = useBetslipStore();
+
+  const isSelected = selection
+    ? selections.some((s) => s.selectionId === selection.selectionId)
+    : false;
 
   useEffect(() => {
     if (prevPrice.current === null) {
@@ -32,11 +39,22 @@ export function OddButton({ price }: OddButtonProps) {
     return () => clearTimeout(timer);
   }, [flash]);
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!selection || price === '-') return;
+    toggleSelection({ ...selection, currentOdd: parseFloat(price) });
+  };
+
   const flashClass =
     flash === 'up' ? ' odd--flash-up' : flash === 'down' ? ' odd--flash-down' : '';
+  const activeClass = isSelected ? ' active' : '';
 
   return (
-    <a href="#0" className={`point__box${flashClass}`}>
+    <a
+      href="#0"
+      className={`point__box${flashClass}${activeClass}`}
+      onClick={handleClick}
+    >
       {price}
     </a>
   );
