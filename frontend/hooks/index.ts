@@ -13,6 +13,7 @@ export {
 
 // Live odds hooks
 export { useLiveOdds } from './useLiveOdds';
+export { useBetslipOddsSync } from './useBetslipOddsSync';
 export type { OddsDelta, OddsState, UseLiveOddsReturn } from './useLiveOdds';
 
 export { useAllLiveMatches } from './useAllLiveMatches';
