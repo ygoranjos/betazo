@@ -16,6 +16,7 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
   wallet       Wallet?
+  bets         Bet[]
 
   @@map("users")
 }
@@ -38,4 +39,27 @@ model HouseConfig {
   updatedAt          DateTime @updatedAt @map("updated_at")
 
   @@map("house_configs")
+}
+
+enum BetStatus {
+  PENDING
+  WON
+  LOST
+  CANCELLED
+  VOID
+}
+
+model Bet {
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  stake           Decimal   @db.Decimal(18, 2)
+  combinedOdds    Decimal   @map("combined_odds") @db.Decimal(10, 4)
+  potentialPayout Decimal   @map("potential_payout") @db.Decimal(18, 2)
+  status          BetStatus @default(PENDING)
+  selections      Json
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@map("bets")
 }
