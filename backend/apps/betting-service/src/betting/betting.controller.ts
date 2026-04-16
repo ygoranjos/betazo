@@ -1,8 +1,10 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { BettingService } from './betting.service';
 import { WalletTransactionService } from './wallet-transaction.service';
 import { ValidateTicketDto } from './dto/validate-ticket.dto';
 import { PlaceBetDto } from './dto/place-bet.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { CurrentUser, type JwtPayload } from '../common/decorators/current-user.decorator';
 
 @Controller('bets')
 export class BettingController {
@@ -18,8 +20,9 @@ export class BettingController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  placeBet(@Body() dto: PlaceBetDto) {
-    return this.walletTransactionService.placeBet(dto);
+  placeBet(@Body() dto: PlaceBetDto, @CurrentUser() user: JwtPayload) {
+    return this.walletTransactionService.placeBet(dto, user.sub);
   }
 }

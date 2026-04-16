@@ -3,18 +3,12 @@ import {
   ArrayMinSize,
   IsArray,
   IsNumber,
-  IsString,
-  IsUUID,
   Min,
   ValidateNested,
 } from 'class-validator';
 import { SelectionDto } from './validate-ticket.dto';
 
 export class PlaceBetDto {
-  @IsString()
-  @IsUUID()
-  userId: string;
-
   @IsNumber()
   @Min(0.01)
   stake: number;
