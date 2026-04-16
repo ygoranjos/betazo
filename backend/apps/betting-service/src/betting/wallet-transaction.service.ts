@@ -1,8 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Bet } from '@prisma/client';
 import { Decimal } from 'decimal.js';
 import { PrismaService } from '@betazo/database';
 import { BetPlacedPayload, KafkaProducerService, KAFKA_TOPICS } from '@betazo/kafka-client';
+import { RedisService } from '@betazo/redis-cache';
 import { PlaceBetDto } from './dto/place-bet.dto';
 import { SelectionDto } from './dto/validate-ticket.dto';
 
@@ -12,14 +13,34 @@ interface WalletRow {
   user_id: string;
 }
 
+interface OddsFinal {
+  price: number;
+  source: string;
+  updated_at: string;
+}
+
+interface ChangedOddsSelection {
+  eventId: string;
+  marketKey: string;
+  selectionId: string;
+  requestedPrice: number;
+  currentPrice: number | null;
+}
+
+const ODD_MAX_VARIANCE_PERCENT = 1;
+
 @Injectable()
 export class WalletTransactionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly kafkaProducer: KafkaProducerService,
+    private readonly redis: RedisService,
   ) {}
 
   async placeBet(dto: PlaceBetDto, userId: string): Promise<Bet> {
+
+    await this.validateOddsBeforeTransaction(dto.selections);
+
     const stake = new Decimal(dto.stake);
     const combinedOdds = dto.selections.reduce(
       (acc, s) => acc.times(new Decimal(s.price)),
@@ -90,6 +111,44 @@ export class WalletTransactionService {
     await this.kafkaProducer.publish(KAFKA_TOPICS.BET_PLACED, payload);
 
     return bet;
+  }
+
+  private async validateOddsBeforeTransaction(selections: SelectionDto[]): Promise<void> {
+    const changed: ChangedOddsSelection[] = [];
+
+    for (const selection of selections) {
+      const key = `odds:final:${selection.eventId}:${selection.marketKey}:${selection.selectionId}`;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      const raw: string | null = await (this.redis.get(key) as Promise<string | null>);
+
+      let currentPrice: number | null = null;
+      if (raw !== null) {
+        const parsed = JSON.parse(raw) as OddsFinal;
+        currentPrice = parsed.price;
+      }
+
+      const isExpired = currentPrice === null;
+      const variancePercent = isExpired
+        ? Infinity
+        : (Math.abs(currentPrice - selection.price) / selection.price) * 100;
+
+      if (isExpired || variancePercent > ODD_MAX_VARIANCE_PERCENT) {
+        changed.push({
+          eventId: selection.eventId,
+          marketKey: selection.marketKey,
+          selectionId: selection.selectionId,
+          requestedPrice: selection.price,
+          currentPrice,
+        });
+      }
+    }
+
+    if (changed.length > 0) {
+      throw new ConflictException({
+        message: 'As odds de uma ou mais seleções foram alteradas. Revise sua aposta.',
+        changedSelections: changed,
+      });
+    }
   }
 
   private toSelectionJson(selections: SelectionDto[]) {
