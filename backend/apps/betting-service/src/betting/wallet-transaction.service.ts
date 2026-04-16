@@ -9,7 +9,7 @@ import { SelectionDto } from './dto/validate-ticket.dto';
 
 interface WalletRow {
   id: string;
-  balance: string; // PostgreSQL DECIMAL retorna como string em queries raw
+  balance: string;
   user_id: string;
 }
 
@@ -48,11 +48,7 @@ export class WalletTransactionService {
     );
     const potentialPayout = stake.times(combinedOdds);
 
-    // Passo 1-4: ACID — tudo em um único bloco de transação no PostgreSQL.
-    // Se qualquer passo falhar, o Prisma faz rollback automático.
     const bet = await this.prisma.$transaction(async (tx) => {
-      // 1. SELECT FOR UPDATE — bloqueia a linha da carteira para evitar race conditions.
-      //    Nenhuma outra transação pode ler ou escrever nessa linha até o commit/rollback.
       const rows = await tx.$queryRaw<WalletRow[]>`
         SELECT id, balance, user_id
         FROM wallets
@@ -69,21 +65,17 @@ export class WalletTransactionService {
       const wallet = rows[0];
       const currentBalance = new Decimal(wallet.balance);
 
-      // 2. Valida saldo suficiente antes de qualquer escrita
       if (currentBalance.lessThan(stake)) {
         throw new BadRequestException(
           `Saldo insuficiente. Disponível: ${currentBalance.toFixed(2)}, Necessário: ${stake.toFixed(2)}`,
         );
       }
 
-      // 3. Decrementa o saldo da carteira
       await tx.wallet.update({
         where: { id: wallet.id },
         data: { balance: { decrement: dto.stake } },
       });
 
-      // 4. Cria o registro da aposta com status PENDING.
-      //    Se esta operação falhar, o passo 3 é revertido automaticamente.
       return tx.bet.create({
         data: {
           userId,
@@ -96,10 +88,6 @@ export class WalletTransactionService {
       });
     });
 
-    // Passo 5: Publicar evento no Kafka APÓS o commit do banco.
-    // Kafka não suporta rollback — publicar dentro da transaction criaria
-    // mensagens "mentirosas" caso o commit do DB falhasse.
-    // Aguarda ACK do broker antes de retornar ao cliente.
     const payload: BetPlacedPayload = {
       betId: bet.id,
       userId: bet.userId,
