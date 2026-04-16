@@ -27,6 +27,7 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.2",
+    "@nestjs/microservices": "^11.1.19",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/platform-socket.io": "^11.1.17",
     "@nestjs/swagger": "^11.2.6",
@@ -39,6 +40,7 @@
     "cookie-parser": "^1.4.7",
     "decimal.js": "^10.6.0",
     "ioredis": "^5.10.1",
+    "kafkajs": "^2.2.4",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.3",
@@ -98,7 +100,9 @@
       "@betazo/database": "<rootDir>/libs/database/src/index.ts",
       "@betazo/database/(.*)": "<rootDir>/libs/database/src/$1",
       "@betazo/redis-cache": "<rootDir>/libs/redis-cache/src/index.ts",
-      "@betazo/redis-cache/(.*)": "<rootDir>/libs/redis-cache/src/$1"
+      "@betazo/redis-cache/(.*)": "<rootDir>/libs/redis-cache/src/$1",
+      "@betazo/kafka-client": "<rootDir>/libs/kafka-client/src/index.ts",
+      "@betazo/kafka-client/(.*)": "<rootDir>/libs/kafka-client/src/$1"
     }
   }
 }
