@@ -22,3 +22,7 @@ export type { BetslipSelection } from './betslipStore';
 // Toast store
 export { useToastStore } from './toastStore';
 export type { Toast } from './toastStore';
+
+// Matches store (singleton WebSocket)
+export { useMatchesStore } from './matchesStore';
+export type { LiveMatch, MatchMarket, MatchOutcome } from './matchesStore';

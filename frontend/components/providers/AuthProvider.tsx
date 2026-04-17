@@ -2,6 +2,7 @@
 
 import { useEffect, createContext, useContext, type ReactNode } from 'react';
 import { useAuthStore } from '@/store';
+import { initMatchesSocket } from '@/store/matchesStore';
 
 interface AuthContextType {
   isReady: boolean;
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     setHasHydrated(true);
+    initMatchesSocket();
   }, [setHasHydrated]);
 
   const value = {
