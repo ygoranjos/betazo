@@ -1,5 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { useAuthStore } from '@/store';
+import { useAuthStore } from '@/store/authStore';
 
 // All requests go through Next.js proxy (/proxy/*) to avoid cross-origin cookie issues.
 // The proxy rewrites to the real services internally.
@@ -127,4 +127,18 @@ export const matchesEndpoints = {
 
 export const liveOddsEndpoints: LiveOddsEndpoints = {
   subscribe: (eventId) => liveOddsApi.post('/subscribe', { eventId }),
+};
+
+export interface PlaceBetPayload {
+  stake: number;
+  selections: {
+    eventId: string;
+    marketKey: string;
+    selectionId: string;
+    price: number;
+  }[];
+}
+
+export const betsEndpoints = {
+  placeBet: (payload: PlaceBetPayload) => gatewayApi.post('/bets', payload),
 };
