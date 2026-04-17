@@ -1,6 +1,9 @@
 'use client';
 
 import { create } from 'zustand';
+import { isAxiosError } from 'axios';
+import { betsEndpoints } from '@/lib/api';
+import { useToastStore } from './toastStore';
 
 export interface BetslipSelection {
   selectionId: string;  // chave única — "{externalId}:{marketKey}:{side}"
@@ -14,9 +17,15 @@ export interface BetslipSelection {
   sport: string;
 }
 
+interface ChangedSelection {
+  selectionId: string;
+  currentPrice: number | null;
+}
+
 interface BetslipState {
   selections: BetslipSelection[];
   multipleStake: number;
+  isSubmitting: boolean;
 
   toggleSelection: (selection: BetslipSelection) => void;
   removeSelection: (selectionId: string) => void;
@@ -24,13 +33,15 @@ interface BetslipState {
   acceptOdd: (selectionId: string) => void;
   setMultipleStake: (stake: number) => void;
   clearBetslip: () => void;
+  placeBet: (stake: number) => Promise<void>;
 }
 
 const ODD_TOLERANCE = 0.0001;
 
-export const useBetslipStore = create<BetslipState>()((set) => ({
+export const useBetslipStore = create<BetslipState>()((set, get) => ({
   selections: [],
   multipleStake: 0,
+  isSubmitting: false,
 
   toggleSelection: (selection) =>
     set((state) => {
@@ -71,6 +82,54 @@ export const useBetslipStore = create<BetslipState>()((set) => ({
   setMultipleStake: (stake) => set({ multipleStake: stake }),
 
   clearBetslip: () => set({ selections: [], multipleStake: 0 }),
+
+  placeBet: async (stake: number) => {
+    const { selections, clearBetslip, markOddStale } = get();
+
+    set({ isSubmitting: true });
+
+    try {
+      await betsEndpoints.placeBet({
+        stake,
+        selections: selections.map((s) => ({
+          eventId: s.matchId,
+          marketKey: s.marketId,
+          selectionId: s.selectionId,
+          price: s.currentOdd,
+        })),
+      });
+
+      clearBetslip();
+      useToastStore.getState().success('Aposta realizada com sucesso!');
+    } catch (err) {
+      if (isAxiosError(err)) {
+        const status = err.response?.status;
+
+        if (status === 409) {
+          const data = err.response?.data as {
+            changedSelections: ChangedSelection[];
+          };
+          data.changedSelections.forEach((cs) => {
+            if (cs.currentPrice !== null) {
+              markOddStale(cs.selectionId, cs.currentPrice);
+            }
+          });
+          useToastStore.getState().warning(
+            'Odds alteradas. Aceite as novas cotações para continuar.',
+          );
+        } else if (status === 400) {
+          const msg = (err.response?.data as { message?: string })?.message;
+          useToastStore.getState().error(msg ?? 'Saldo insuficiente.');
+        } else {
+          useToastStore.getState().error('Erro ao realizar aposta. Tente novamente.');
+        }
+      } else {
+        useToastStore.getState().error('Erro inesperado. Tente novamente.');
+      }
+    } finally {
+      set({ isSubmitting: false });
+    }
+  },
 }));
 
 // ─── Debug (dev only) ────────────────────────────────────────────────────────

@@ -169,6 +169,7 @@ services:
       REDIS_PORT: 6379
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB}
       DIRECT_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      BETTING_SERVICE_URL: http://betting-service:3003
     depends_on:
       pgbouncer:
         condition: service_healthy

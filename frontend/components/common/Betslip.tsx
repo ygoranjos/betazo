@@ -42,10 +42,14 @@ function ActionButton({
   canBet,
   isAuthenticated,
   hasStaleOdds,
+  isSubmitting,
+  onPlaceBet,
 }: {
   canBet: boolean;
   isAuthenticated: boolean;
   hasStaleOdds: boolean;
+  isSubmitting: boolean;
+  onPlaceBet: () => void;
 }) {
   if (!isAuthenticated) {
     return (
@@ -55,14 +59,15 @@ function ActionButton({
     );
   }
 
-  const disabled = !canBet || hasStaleOdds;
-  const label = hasStaleOdds ? 'Accept changed odds' : 'Place Bet';
+  const disabled = !canBet || hasStaleOdds || isSubmitting;
+  const label = isSubmitting ? 'Aguarde...' : hasStaleOdds ? 'Accept changed odds' : 'Place Bet';
 
   return (
     <button
       type="button"
       className="cmn--btn2"
       disabled={disabled}
+      onClick={onPlaceBet}
       style={{ width: '100%', border: 'none', cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1 }}
     >
       <span>{label}</span>
@@ -259,7 +264,7 @@ function SelectionItem({
 type TabType = 'single' | 'multiple' | 'system';
 
 const Betslip = () => {
-  const { selections, removeSelection, clearBetslip, multipleStake, setMultipleStake, acceptOdd } = useBetslipStore();
+  const { selections, removeSelection, clearBetslip, multipleStake, setMultipleStake, acceptOdd, placeBet, isSubmitting } = useBetslipStore();
   const totalOdds      = useBetslipStore(selectTotalOdds);
   const potentialReturn = useBetslipStore(selectPotentialReturn);
   const hasStaleOdds   = useBetslipStore(selectHasStaleOdds);
@@ -380,7 +385,7 @@ const Betslip = () => {
                     onAcceptOdd={() => acceptOdd(s.selectionId)}
                   />
                 ))}
-                <ActionButton canBet={singleCanBet} isAuthenticated={isAuthenticated} hasStaleOdds={hasStaleOdds} />
+                <ActionButton canBet={singleCanBet} isAuthenticated={isAuthenticated} hasStaleOdds={hasStaleOdds} isSubmitting={isSubmitting} onPlaceBet={() => void placeBet(singleTotalStake)} />
               </div>
             )}
           </div>
@@ -442,7 +447,7 @@ const Betslip = () => {
                   <span>Possible Payout</span>
                   <span>{potentialReturn.toFixed(2)} $</span>
                 </div>
-                <ActionButton canBet={multipleCanBet} isAuthenticated={isAuthenticated} hasStaleOdds={hasStaleOdds} />
+                <ActionButton canBet={multipleCanBet} isAuthenticated={isAuthenticated} hasStaleOdds={hasStaleOdds} isSubmitting={isSubmitting} onPlaceBet={() => void placeBet(multipleStake)} />
               </div>
             )}
           </div>
@@ -515,7 +520,7 @@ const Betslip = () => {
                   <span>Payout máximo</span>
                   <span>{(sharedStake * totalOdds).toFixed(2)} $</span>
                 </div>
-                <ActionButton canBet={systemCanBet} isAuthenticated={isAuthenticated} hasStaleOdds={hasStaleOdds} />
+                <ActionButton canBet={systemCanBet} isAuthenticated={isAuthenticated} hasStaleOdds={hasStaleOdds} isSubmitting={isSubmitting} onPlaceBet={() => void placeBet(systemTotalStake)} />
               </div>
             )}
           </div>
