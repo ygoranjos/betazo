@@ -116,9 +116,10 @@ export class WalletTransactionService {
       }
 
       const isExpired = currentPrice === null;
-      const variancePercent = isExpired
-        ? Infinity
-        : (Math.abs(currentPrice - selection.price) / selection.price) * 100;
+      const variancePercent =
+        currentPrice === null
+          ? Infinity
+          : (Math.abs(currentPrice - selection.price) / selection.price) * 100;
 
       if (isExpired || variancePercent > ODD_MAX_VARIANCE_PERCENT) {
         changed.push({

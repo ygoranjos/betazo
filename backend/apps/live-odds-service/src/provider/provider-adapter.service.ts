@@ -25,6 +25,7 @@ const POLLING_LIVE_INTERVAL_MS = 10_000;
 const POLLING_PREMATCH_INTERVAL_MS = 60_000;
 const REDIS_SYNC_INTERVAL_MS = 30_000;
 const MATCH_TTL_SECONDS = 300;
+const ODDS_FINAL_TTL_SECONDS = 60;
 
 export const RAW_DATA_TTL_MS = 5 * 60 * 1000;
 
@@ -260,11 +261,20 @@ export class ProviderAdapterService implements OnModuleInit, OnModuleDestroy {
 
   private async persistMatch(match: Match): Promise<void> {
     try {
-      await this.redis.set(
-        `odds:match:${match.externalId}`,
-        JSON.stringify(match),
-        MATCH_TTL_SECONDS,
-      );
+      const now = new Date().toISOString();
+      const writes: Promise<void>[] = [
+        this.redis.set(`odds:match:${match.externalId}`, JSON.stringify(match), MATCH_TTL_SECONDS),
+      ];
+
+      for (const market of match.markets) {
+        for (const outcome of market.outcomes) {
+          const key = `odds:final:${match.id}:${market.id}:${outcome.selectionId}`;
+          const value = JSON.stringify({ price: outcome.price, source: 'base', updated_at: now });
+          writes.push(this.redis.set(key, value, ODDS_FINAL_TTL_SECONDS));
+        }
+      }
+
+      await Promise.all(writes);
     } catch (err) {
       this.logger.error(`Redis write failed for match ${match.externalId}`, err);
     }
