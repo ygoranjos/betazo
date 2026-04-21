@@ -8,7 +8,7 @@ const TableGamesTab = () => {
       id="casinot5"
       role="tabpanel"
       aria-labelledby="casinot5"
-      tabIndex="0"
+      tabIndex={0}
     >
       {/* Table Games */}
       <div className="common__head mb__30">

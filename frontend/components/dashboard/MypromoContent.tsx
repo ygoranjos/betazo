@@ -69,7 +69,7 @@ const MypromoContent = () => {
             id="protab1"
             role="tabpanel"
             aria-labelledby="protab1"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="promomy__items mb__30">
               <div className="thumb">
@@ -125,7 +125,7 @@ const MypromoContent = () => {
             id="protab2"
             role="tabpanel"
             aria-labelledby="protab2"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="promomy__items mb__30">
               <div className="thumb">
@@ -181,7 +181,7 @@ const MypromoContent = () => {
             id="protab3"
             role="tabpanel"
             aria-labelledby="protab3"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="promomy__items mb__30">
               <div className="thumb">

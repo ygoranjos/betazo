@@ -11,7 +11,7 @@ const LeftBetsModal = () => {
     <div
       className="modal event__modal"
       id="eventsp"
-      tabIndex="-1"
+      tabIndex={-1}
       aria-hidden="true"
     >
       <div className="modal-dialog  modal-lg modal-dialog-scrollable">
@@ -30,7 +30,7 @@ const LeftBetsModal = () => {
                 className="tab-pane text-white fade show active"
                 id="mainTabevent"
                 role="tabpanel"
-                tabIndex="0"
+                tabIndex={0}
               >
                 <div className="popular__events__body">
                   <div className="container-fluid p-0">
@@ -98,7 +98,7 @@ const LeftBetsModal = () => {
                                 id="nav-homepreevent"
                                 role="tabpanel"
                                 aria-labelledby="nav-home-tabpreevent"
-                                tabIndex="0"
+                                tabIndex={0}
                               >
                                 <div className="prematch__scopre">
                                   <Link
@@ -212,7 +212,7 @@ const LeftBetsModal = () => {
                                 id="nav-profilepreevent"
                                 role="tabpanel"
                                 aria-labelledby="nav-profile-tabpreevent"
-                                tabIndex="0"
+                                tabIndex={0}
                               >
                                 <div className="multiple__components">
                                   <div className="prematch__scopre">

@@ -1,12 +1,13 @@
 "use client";
 
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import ModalVideo from "react-modal-video";
 import play from "/public/img/games/play.png";
 
-const CasinoBoxCard = ({ img, live = false }) => {
+const CasinoBoxCard = ({ img, live = false }: { img: React.ComponentProps<typeof Image>['src']; live?: boolean }) => {
   const [isOpen, setOpen] = useState(false);
 
   return (

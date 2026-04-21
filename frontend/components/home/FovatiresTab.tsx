@@ -18,7 +18,7 @@ const FovatiresTab = () => {
       className="tab-pane mt__30 text-white fade"
       id="mainTab14"
       role="tabpanel"
-      tabIndex="0"
+      tabIndex={0}
     >
       {/* main body */}
       <div className="main__body__wrap left__right__space pb-60">

@@ -36,7 +36,7 @@ const VirtualTab = () => {
         className="tab-pane mt__30 text-white fade"
         id="mainTab12"
         role="tabpanel"
-        tabIndex="0"
+        tabIndex={0}
       >
         {/* main Body */}
         <div className="main__body__wrap left__right__space pb-60">
@@ -114,7 +114,7 @@ const VirtualTab = () => {
               id="virtualfoot1"
               role="tabpanel"
               aria-labelledby="virtualfoot1"
-              tabIndex="0"
+              tabIndex={0}
             >
               <div className="world__cup__area">
                 <div className="world__tabs">
@@ -167,7 +167,7 @@ const VirtualTab = () => {
                     id="worlds1"
                     role="tabpanel"
                     aria-labelledby="worlds1"
-                    tabIndex="0"
+                    tabIndex={0}
                   >
                     <div className="world__thumb__wrap">
                       <div className="thumb">
@@ -186,7 +186,7 @@ const VirtualTab = () => {
                     id="worlds2"
                     role="tabpanel"
                     aria-labelledby="worlds2"
-                    tabIndex="0"
+                    tabIndex={0}
                   >
                     <div className="world__thumb__wrap">
                       <div className="thumb">
@@ -205,7 +205,7 @@ const VirtualTab = () => {
                     id="worlds3"
                     role="tabpanel"
                     aria-labelledby="worlds3"
-                    tabIndex="0"
+                    tabIndex={0}
                   >
                     <div className="world__thumb__wrap">
                       <div className="thumb">
@@ -230,7 +230,7 @@ const VirtualTab = () => {
               id="virtualfoot2"
               role="tabpanel"
               aria-labelledby="virtualfoot2"
-              tabIndex="0"
+              tabIndex={0}
             >
               <div className="world__cup__area">
                 <div className="world__tabs">
@@ -283,7 +283,7 @@ const VirtualTab = () => {
                     id="worlds1bas"
                     role="tabpanel"
                     aria-labelledby="worlds1bas"
-                    tabIndex="0"
+                    tabIndex={0}
                   >
                     <div className="world__thumb__wrap">
                       <div className="thumb">
@@ -302,7 +302,7 @@ const VirtualTab = () => {
                     id="worlds2bas"
                     role="tabpanel"
                     aria-labelledby="worlds2bas"
-                    tabIndex="0"
+                    tabIndex={0}
                   >
                     <div className="world__thumb__wrap">
                       <div className="thumb">
@@ -321,7 +321,7 @@ const VirtualTab = () => {
                     id="worlds3bas"
                     role="tabpanel"
                     aria-labelledby="worlds3bas"
-                    tabIndex="0"
+                    tabIndex={0}
                   >
                     <div className="world__thumb__wrap">
                       <div className="thumb">
@@ -347,7 +347,7 @@ const VirtualTab = () => {
               id="virtualfoot3"
               role="tabpanel"
               aria-labelledby="virtualfoot3"
-              tabIndex="0"
+              tabIndex={0}
             >
               <div className="world__cup__area">
                 <div className="world__tabs">
@@ -400,7 +400,7 @@ const VirtualTab = () => {
                     id="worlds1afoot"
                     role="tabpanel"
                     aria-labelledby="worlds1afoot"
-                    tabIndex="0"
+                    tabIndex={0}
                   >
                     <div className="world__thumb__wrap">
                       <div className="thumb">
@@ -419,7 +419,7 @@ const VirtualTab = () => {
                     id="worlds2afoot"
                     role="tabpanel"
                     aria-labelledby="worlds2afoot"
-                    tabIndex="0"
+                    tabIndex={0}
                   >
                     <div className="world__thumb__wrap">
                       <div className="thumb">
@@ -438,7 +438,7 @@ const VirtualTab = () => {
                     id="worlds3afoot"
                     role="tabpanel"
                     aria-labelledby="worlds3afoot"
-                    tabIndex="0"
+                    tabIndex={0}
                   >
                     <div className="world__thumb__wrap">
                       <div className="thumb">
@@ -464,7 +464,7 @@ const VirtualTab = () => {
               id="virtualfoot4"
               role="tabpanel"
               aria-labelledby="virtualfoot4"
-              tabIndex="0"
+              tabIndex={0}
             >
               <div className="virtual__video__wrap">
                 {[vr1, vr2, vr3, vr4, vr5, vr6, vr7, vr8, vr9].map((itm, i) => (

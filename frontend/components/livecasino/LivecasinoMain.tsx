@@ -51,7 +51,7 @@ const LivecasinoMain = () => {
                 id="casinot7"
                 role="tabpanel"
                 aria-labelledby="casinot7"
-                tabIndex="0"
+                tabIndex={0}
               >
                 {/* Top Games */}
                 <div className="common__head mb__30">

@@ -104,7 +104,7 @@ const NextToGo = () => {
             id="height1next"
             role="tabpanel"
             aria-labelledby="nav-home-tabpre"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table">
               {/* Next All Tab */}
@@ -115,7 +115,7 @@ const NextToGo = () => {
             className="tab-pane fade text-white "
             id="nextfootball"
             role="tabpanel"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table main__table__nextfootball">
               {/* Next Football Tab */}
@@ -126,7 +126,7 @@ const NextToGo = () => {
             className="tab-pane fade text-white "
             id="nextgotennistab"
             role="tabpanel"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table main__table__nextfootball">
               {/* Next Tennis Tab */}
@@ -137,7 +137,7 @@ const NextToGo = () => {
             className="tab-pane fade text-white "
             id="nextbaskettab"
             role="tabpanel"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table main__table__nextfootball">
               {/* Next Basketball Tab */}
@@ -148,7 +148,7 @@ const NextToGo = () => {
             className="tab-pane fade text-white "
             id="nexticehockytab"
             role="tabpanel"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table main__table__nextfootball">
               {/* Next IceHockey Tab */}
@@ -159,7 +159,7 @@ const NextToGo = () => {
             className="tab-pane fade text-white "
             id="afootballtab"
             role="tabpanel"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table main__table__nextfootball">
               {/* Next American Football Tab */}
