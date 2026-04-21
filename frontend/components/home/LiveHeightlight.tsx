@@ -105,7 +105,7 @@ const LiveHeightlight = () => {
             id="height1"
             role="tabpanel"
             aria-labelledby="nav-home-tabpre"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table">
               {/* Live Football Tab */}
@@ -119,7 +119,7 @@ const LiveHeightlight = () => {
             className="tab-pane fade text-white "
             id="height2tennis"
             role="tabpanel"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table main__table__tennis">
               {/* Live Tennis Tab */}
@@ -133,7 +133,7 @@ const LiveHeightlight = () => {
             className="tab-pane fade text-white "
             id="basketbtab"
             role="tabpanel"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table main__table__tennis main__table__basketball">
               {/* Live Basketball Tab */}
@@ -147,7 +147,7 @@ const LiveHeightlight = () => {
             className="tab-pane fade text-white "
             id="vollyballs"
             role="tabpanel"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table volloy__max main__table__tennis">
               {/* Live Vollyball Tab */}
@@ -161,7 +161,7 @@ const LiveHeightlight = () => {
             className="tab-pane fade text-white "
             id="crickettab"
             role="tabpanel"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table main__table__tennis main__table__cricket">
               {/* Live Cricket Tab */}
@@ -175,7 +175,7 @@ const LiveHeightlight = () => {
             className="tab-pane fade text-white "
             id="tabletennis"
             role="tabpanel"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table volloy__max main__table__tennis main__table__ttennis">
               {/* Live Table Tennis Tab */}

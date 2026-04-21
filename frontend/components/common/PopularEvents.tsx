@@ -63,7 +63,7 @@ const PopularEvents = () => {
             id="nav-homepre"
             role="tabpanel"
             aria-labelledby="nav-home-tabpre"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="prematch__scopre">
               <Link href="#pre" className="prescore__items">
@@ -157,7 +157,7 @@ const PopularEvents = () => {
             id="nav-profilepre"
             role="tabpanel"
             aria-labelledby="nav-profile-tabpre"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="multiple__components">
               <div className="prematch__scopre">

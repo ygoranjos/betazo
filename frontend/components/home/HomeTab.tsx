@@ -10,7 +10,7 @@ const HomeTab = () => {
       className="tab-pane text-white fade show active"
       id="mainTab"
       role="tabpanel"
-      tabIndex="0"
+      tabIndex={0}
     >
       {/* Match Fixing Slider */}
       <MatchFixingSlider />

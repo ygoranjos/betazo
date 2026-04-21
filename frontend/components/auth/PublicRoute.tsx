@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 
-interface PublicRouteProps {
+export interface PublicRouteProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
   redirectTo?: string;

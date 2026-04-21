@@ -99,7 +99,7 @@ const SignUpModal = () => {
                                 type="email"
                                 id="emailsign2"
                                 placeholder="Email Your"
-                                disabled={registerMutation.isPending}
+                                disabled={registerMutation.isLoading}
                                 {...register("email")}
                               />
                               {formState.errors.email && (
@@ -112,7 +112,7 @@ const SignUpModal = () => {
                                 type="text"
                                 id="username"
                                 placeholder="Username"
-                                disabled={registerMutation.isPending}
+                                disabled={registerMutation.isLoading}
                                 {...register("username")}
                               />
                               {formState.errors.username && (
@@ -125,7 +125,7 @@ const SignUpModal = () => {
                                 id="toggle-password32"
                                 type="password"
                                 placeholder="Your Password"
-                                disabled={registerMutation.isPending}
+                                disabled={registerMutation.isLoading}
                                 {...register("password")}
                               />
                               {formState.errors.password && (
@@ -139,7 +139,7 @@ const SignUpModal = () => {
                                 id="toggle-password33"
                                 type="password"
                                 placeholder="Confirm Password"
-                                disabled={registerMutation.isPending}
+                                disabled={registerMutation.isLoading}
                                 {...register("confirmPassword")}
                               />
                               {formState.errors.confirmPassword && (
@@ -157,8 +157,8 @@ const SignUpModal = () => {
                               <Link href="URL:void(0)">Forgot Password</Link>
                             </div>
                             <div className="create__btn">
-                              <button type="submit" className="cmn--btn" disabled={registerMutation.isPending}>
-                                <span>{registerMutation.isPending ? "Registering..." : "Sign Up"}</span>
+                              <button type="submit" className="cmn--btn" disabled={registerMutation.isLoading}>
+                                <span>{registerMutation.isLoading ? "Registering..." : "Sign Up"}</span>
                               </button>
                             </div>
                             <p>

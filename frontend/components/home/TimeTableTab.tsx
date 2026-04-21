@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const TimeTableTab = ({ id }) => {
+const TimeTableTab = ({ id }: { id: string | number }) => {
   return (
     <div className="world__point__table">
       <div className="world__point__tab">
@@ -133,7 +133,7 @@ const TimeTableTab = ({ id }) => {
           id={`pointw1${id}`}
           role="tabpanel"
           aria-labelledby={`pointw1${id}`}
-          tabIndex="0"
+          tabIndex={0}
         >
           <div className="world__point__text">
             <span>United States - Wales</span>
@@ -145,7 +145,7 @@ const TimeTableTab = ({ id }) => {
           id={`pointw2${id}`}
           role="tabpanel"
           aria-labelledby={`pointw2${id}`}
-          tabIndex="0"
+          tabIndex={0}
         >
           <div className="world__point__text">
             <span>Portugal-Uruguay</span>
@@ -308,7 +308,7 @@ const TimeTableTab = ({ id }) => {
           id={`pointw3${id}`}
           role="tabpanel"
           aria-labelledby={`pointw3${id}`}
-          tabIndex="0"
+          tabIndex={0}
         >
           <div className="world__point__text">
             <span>Ecuador - Senegal</span>
@@ -470,7 +470,7 @@ const TimeTableTab = ({ id }) => {
           id={`pointw4${id}`}
           role="tabpanel"
           aria-labelledby={`pointw4${id}`}
-          tabIndex="0"
+          tabIndex={0}
         >
           <div className="world__point__text">
             <span>Portugal-Uruguay</span>
@@ -633,7 +633,7 @@ const TimeTableTab = ({ id }) => {
           id={`pointw5${id}`}
           role="tabpanel"
           aria-labelledby={`pointw5${id}`}
-          tabIndex="0"
+          tabIndex={0}
         >
           <div className="world__point__text">
             <span>Portugal-Uruguay</span>
@@ -796,7 +796,7 @@ const TimeTableTab = ({ id }) => {
           id={`pointw6${id}`}
           role="tabpanel"
           aria-labelledby={`pointw6${id}`}
-          tabIndex="0"
+          tabIndex={0}
         >
           <div className="world__point__text">
             <span>Portugal-Uruguay</span>
@@ -959,7 +959,7 @@ const TimeTableTab = ({ id }) => {
           id={`pointw${id}`}
           role="tabpanel"
           aria-labelledby={`pointw${id}`}
-          tabIndex="0"
+          tabIndex={0}
         >
           <div className="world__point__text">
             <span>Portugal-Uruguay</span>
@@ -1122,7 +1122,7 @@ const TimeTableTab = ({ id }) => {
           id={`pointw8${id}`}
           role="tabpanel"
           aria-labelledby={`pointw8${id}`}
-          tabIndex="0"
+          tabIndex={0}
         >
           <div className="world__point__text">
             <span>Portugal-Uruguay</span>
@@ -1285,7 +1285,7 @@ const TimeTableTab = ({ id }) => {
           id={`pointw9${id}`}
           role="tabpanel"
           aria-labelledby={`pointw9${id}`}
-          tabIndex="0"
+          tabIndex={0}
         >
           <div className="world__point__text">
             <span>Portugal-Uruguay</span>
@@ -1448,7 +1448,7 @@ const TimeTableTab = ({ id }) => {
           id={`pointw10${id}`}
           role="tabpanel"
           aria-labelledby={`pointw10${id}`}
-          tabIndex="0"
+          tabIndex={0}
         >
           <div className="world__point__text">
             <span>Portugal-Uruguay</span>

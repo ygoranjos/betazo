@@ -8,7 +8,7 @@ const HorseRacingTab = () => {
       className="tab-pane mt__30 text-white fade"
       id="mainTab11"
       role="tabpanel"
-      tabIndex="0"
+      tabIndex={0}
     >
       <div className="container">
         <div className="row justify-content-end">
@@ -69,7 +69,7 @@ const HorseRacingTab = () => {
               id="horsein1"
               role="tabpanel"
               aria-labelledby="horsein1"
-              tabIndex="0"
+              tabIndex={0}
             >
               <div className="horse__chart__wrap">
                 <h4 className="head__horse">United Kingdom & Ireland</h4>
@@ -391,7 +391,7 @@ const HorseRacingTab = () => {
               id="horsein2"
               role="tabpanel"
               aria-labelledby="horsein2"
-              tabIndex="0"
+              tabIndex={0}
             >
               <div className="horse__chart__wrap">
                 <h4 className="head__horse">France</h4>
@@ -565,7 +565,7 @@ const HorseRacingTab = () => {
               id="horsein3"
               role="tabpanel"
               aria-labelledby="horsein3"
-              tabIndex="0"
+              tabIndex={0}
             >
               <div className="horse__chart__wrap">
                 <h4 className="head__horse">Planing Step One</h4>

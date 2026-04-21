@@ -7,7 +7,7 @@ const RightBetsModal = () => {
     <div
       className="modal mybets__modal"
       id="betsp"
-      tabIndex="-1"
+      tabIndex={-1}
       aria-hidden="true"
     >
       <div className="modal-dialog  modal-lg modal-dialog-scrollable">
@@ -64,7 +64,7 @@ const RightBetsModal = () => {
                   id="nav-homer"
                   role="tabpanel"
                   aria-labelledby="nav-home-tabr"
-                  tabIndex="0"
+                  tabIndex={0}
                 >
                   <div className="multiple__components">
                     <div className="multiple__items">
@@ -119,7 +119,7 @@ const RightBetsModal = () => {
                         id="nav-homesettr"
                         role="tabpanel"
                         aria-labelledby="nav-home-tabsettingr"
-                        tabIndex="0"
+                        tabIndex={0}
                       >
                         <div className="sign__bets__wrap">
                           <h5 className="betslip__title">Betslip</h5>
@@ -144,7 +144,7 @@ const RightBetsModal = () => {
                         id="nav-homeett2r"
                         role="tabpanel"
                         aria-labelledby="nav-home-tabsetting2r"
-                        tabIndex="0"
+                        tabIndex={0}
                       >
                         <div className="sign__bets__wrap">
                           <h5 className="betslip__title">Betslip</h5>
@@ -236,7 +236,7 @@ const RightBetsModal = () => {
                     id="nav-profiler"
                     role="tabpanel"
                     aria-labelledby="nav-profile-tabr"
-                    tabIndex="0"
+                    tabIndex={0}
                   >
                     <div className="multiple__components">
                       <div className="multiple__items">
@@ -306,7 +306,7 @@ const RightBetsModal = () => {
                     id="nav-contactr"
                     role="tabpanel"
                     aria-labelledby="nav-contact-tabr"
-                    tabIndex="0"
+                    tabIndex={0}
                   >
                     <div className="multiple__components">
                       <div className="multiple__items">

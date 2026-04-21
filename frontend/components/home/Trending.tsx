@@ -159,7 +159,7 @@ const Trending = () => {
             id="height1trend"
             role="tabpanel"
             aria-labelledby="nav-home-tabpre"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table larg__width treanding__table">
               {/* Trending Football Tab */}
@@ -171,7 +171,7 @@ const Trending = () => {
             className="tab-pane fade text-white "
             id="treand2"
             role="tabpanel"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table larg__width2 treanding__table main__tabletennis">
               {/* Trending Tennis Tab */}
@@ -184,7 +184,7 @@ const Trending = () => {
             id="treand3"
             role="tabpanel"
             aria-labelledby="nav-home-tabpre"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table larg__width4 treanding__table main__basketballtable">
               {/* Trending Basketball Tab */}
@@ -197,7 +197,7 @@ const Trending = () => {
             id="treand4"
             role="tabpanel"
             aria-labelledby="nav-home-tabpre"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table larg__width5  treanding__table main__basketballtable">
               {/* Trending Vollyball Tab */}
@@ -210,7 +210,7 @@ const Trending = () => {
             id="treand5"
             role="tabpanel"
             aria-labelledby="nav-home-tabpre"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table larg__width6 treanding__table main__basketballtable">
               {/* Trending Table Tennis Tab */}
@@ -223,7 +223,7 @@ const Trending = () => {
             id="treand6"
             role="tabpanel"
             aria-labelledby="nav-home-tabpre"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table treanding__table main__basketballtable larg__width7">
               {/* Trending American Football Tab */}
@@ -236,7 +236,7 @@ const Trending = () => {
             id="treand7"
             role="tabpanel"
             aria-labelledby="nav-home-tabpre"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table larg__width6 treanding__table main__basketballtable">
               {/* Trending Golf Tab */}
@@ -249,7 +249,7 @@ const Trending = () => {
             id="treand8"
             role="tabpanel"
             aria-labelledby="nav-home-tabpre"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table larg__width6 treanding__table main__basketballtable">
               {/* Trending Cycling Tab */}
@@ -262,7 +262,7 @@ const Trending = () => {
             id="treand9"
             role="tabpanel"
             aria-labelledby="nav-home-tabpre"
-            tabIndex="0"
+            tabIndex={0}
           >
             <div className="main__table larg__width6 treanding__table main__basketballtable">
               {/* Trending Beach Volleyball */}

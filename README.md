@@ -40,12 +40,12 @@ O backend consome odds de uma API externa (odds-api.io v3) via WebSocket, normal
 
 ## Portas
 
-| Serviço        | Porta |
-| -------------- | ----- |
-| Auth Service   | 3000  |
-| API Gateway    | 3001  |
-| Live Odds      | 3002  |
-| Frontend       | 5000  |
+| Serviço      | Porta |
+| ------------ | ----- |
+| Auth Service | 3000  |
+| API Gateway  | 3001  |
+| Live Odds    | 3002  |
+| Frontend     | 3005  |
 
 ---
 
@@ -84,11 +84,23 @@ nest start live-odds-service --watch
 
 ### 4. Frontend
 
+Build em dev:
+
 ```bash
 cd frontend
 npm install
 cp .env.local.example .env.local
 npm run dev
+```
+
+Build em prod:
+
+```bash
+cd frontend
+npm install
+cp .env.local.example .env.local
+npm run build
+npm run start
 ```
 
 ---
@@ -197,7 +209,7 @@ O frontend utiliza **React Hook Form** + **Zod** para gerenciamento e validaçã
 Todos os schemas de validação estão em `lib/schemas.ts`:
 
 ```typescript
-import { loginSchema, registerSchema, type LoginFormData } from '@/lib/schemas';
+import { loginSchema, registerSchema, type LoginFormData } from "@/lib/schemas";
 
 // Schema de Login
 export const loginSchema = z.object({
@@ -206,21 +218,23 @@ export const loginSchema = z.object({
 });
 
 // Schema de Registro
-export const registerSchema = z.object({
-  email: z.string().email("Email inválido"),
-  username: z.string().min(3).max(20),
-  password: z.string().min(8),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Senhas não conferem",
-  path: ["confirmPassword"],
-});
+export const registerSchema = z
+  .object({
+    email: z.string().email("Email inválido"),
+    username: z.string().min(3).max(20),
+    password: z.string().min(8),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Senhas não conferem",
+    path: ["confirmPassword"],
+  });
 ```
 
 ### Hooks de Formulário
 
 ```typescript
-import { useAppForm, useFormMutation } from '@/hooks';
+import { useAppForm, useFormMutation } from "@/hooks";
 
 // Hook simples
 const { register, handleSubmit, formState } = useAppForm({
@@ -231,7 +245,7 @@ const { register, handleSubmit, formState } = useAppForm({
 const form = useFormMutation({
   schema: registerSchema,
   mutation: useRegister(),
-  onSuccess: (data) => console.log('Sucesso!', data),
+  onSuccess: (data) => console.log("Sucesso!", data),
 });
 ```
 

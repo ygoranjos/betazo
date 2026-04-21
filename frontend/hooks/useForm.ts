@@ -3,7 +3,7 @@
  * Centraliza lógica comum de formulários
  */
 
-import { useForm, UseFormReturn, FieldValues, UseFormProps } from "react-hook-form";
+import { useForm, UseFormReturn, FieldValues, UseFormProps, DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -27,11 +27,13 @@ export function useAppForm<T extends FieldValues = FieldValues>(
 ): UseFormReturn<T> {
   const { schema, ...formOptions } = options || {};
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useForm<T>({
-    resolver: schema ? zodResolver(schema) : undefined,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: schema ? zodResolver(schema as any) : undefined,
     mode: "onSubmit",
     ...formOptions,
-  });
+  }) as UseFormReturn<T>;
 }
 
 /**
@@ -57,18 +59,20 @@ export function useFormMutation<T extends FieldValues, R = unknown>(
       mutateAsync: (data: T) => Promise<R>;
       isPending: boolean;
     };
-    defaultValues?: Partial<T>;
+    defaultValues?: DefaultValues<T>;
     onSuccess?: (data: R, form: UseFormReturn<T>) => void;
     onError?: (error: unknown, form: UseFormReturn<T>) => void;
   }
 ) {
   const { schema, mutation, defaultValues, onSuccess, onError } = options;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const form = useForm<T>({
-    resolver: schema ? zodResolver(schema) : undefined,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: schema ? zodResolver(schema as any) : undefined,
     mode: "onSubmit",
-    defaultValues: defaultValues as T,
-  });
+    defaultValues,
+  }) as UseFormReturn<T>;
 
   const handleSubmit = async (data: T) => {
     try {

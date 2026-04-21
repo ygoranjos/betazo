@@ -98,17 +98,17 @@ if (typeof window !== 'undefined') {
 export { authApi, gatewayApi, liveOddsApi };
 
 export interface AuthEndpoints {
-  login(email: string, password: string): ReturnType<typeof authApi.post>;
-  register(email: string, username: string, password: string): ReturnType<typeof authApi.post>;
-  logout(): ReturnType<typeof authApi.post>;
+  login(email: string, password: string): Promise<import('axios').AxiosResponse<any>>;
+  register(email: string, username: string, password: string): Promise<import('axios').AxiosResponse<any>>;
+  logout(): Promise<import('axios').AxiosResponse<any>>;
 }
 
 export interface WalletEndpoints {
-  getBalance(): ReturnType<typeof gatewayApi.get>;
+  getBalance(): Promise<import('axios').AxiosResponse<any>>;
 }
 
 export interface LiveOddsEndpoints {
-  subscribe(eventId: string): ReturnType<typeof liveOddsApi.post>;
+  subscribe(eventId: string): Promise<import('axios').AxiosResponse<any>>;
 }
 
 export const authEndpoints: AuthEndpoints = {

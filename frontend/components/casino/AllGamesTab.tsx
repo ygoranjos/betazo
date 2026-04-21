@@ -19,7 +19,7 @@ const AllGamesTab = ({ show = "" }) => {
       id="casinot8"
       role="tabpanel"
       aria-labelledby="casinot1"
-      tabIndex="0"
+      tabIndex={0}
     >
       {/* Top Games */}
       <div className="common__head mb__30">

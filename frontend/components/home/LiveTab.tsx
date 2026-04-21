@@ -12,7 +12,7 @@ const LiveTab = () => {
       className="tab-pane text-white fade"
       id="mainTab2"
       role="tabpanel"
-      tabIndex="0"
+      tabIndex={0}
     >
       {/* Main Body */}
       <div className="main__body__wrap left__right__space pb-60">
