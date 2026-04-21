@@ -229,6 +229,24 @@ services:
       - betazo_network
     restart: unless-stopped
 
+  # Frontend Next.js — porta 3005
+  frontend:
+    build:
+      context: ./frontend
+    container_name: betazo_frontend
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    environment:
+      NEXT_PUBLIC_AUTH_URL: http://auth-service:3000
+      NEXT_PUBLIC_API_GATEWAY_URL: http://api-gateway:3001
+      NEXT_PUBLIC_LIVE_ODDS_URL: http://live-odds-service:3002
+    depends_on:
+      - auth-service
+      - api-gateway
+    networks:
+      - betazo_network
+
 # Volumes - dados persistentes entre restarts
 volumes:
   postgres_data:

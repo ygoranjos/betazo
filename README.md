@@ -40,12 +40,14 @@ O backend consome odds de uma API externa (odds-api.io v3) via WebSocket, normal
 
 ## Portas
 
-| Serviço      | Porta |
-| ------------ | ----- |
-| Auth Service | 3000  |
-| API Gateway  | 3001  |
-| Live Odds    | 3002  |
-| Frontend     | 3005  |
+| Serviço        | Porta |
+| -------------- | ----- |
+| Frontend       | 3005  |
+| Auth Service   | 3000  |
+| API Gateway    | 3001  |
+| Live Odds      | 3002  |
+| Betting        | 3003  |
+| Kafka UI (dev) | 8080  |
 
 ---
 
@@ -54,53 +56,66 @@ O backend consome odds de uma API externa (odds-api.io v3) via WebSocket, normal
 ### 1. Variáveis de ambiente
 
 ```bash
+# Infraestrutura (PostgreSQL, Redis, Kafka)
 cp .env.example .env
+
+# Backend (JWT, DATABASE_URL, Redis, API de odds)
+cp backend/.env.example backend/.env
+
+# Frontend — só necessário para rodar fora do Docker
+cp frontend/.env.local.example frontend/.env.local
 ```
 
-Edite o `.env` na raiz e no `backend/` com as senhas e chaves necessárias. Nunca commite o `.env`.
+Preencha os valores nos arquivos `.env` criados. Nunca commite arquivos `.env`.
 
-### 2. Infraestrutura (Docker)
+### 2. Rodar tudo via Docker (recomendado)
+
+Sobe backend, banco de dados e frontend de uma vez:
 
 ```bash
-# Desenvolvimento (expõe portas + Kafka UI)
+# Produção
+docker compose up -d
+
+# Desenvolvimento (expõe portas individuais + Kafka UI em localhost:8080)
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 # Derrubar
-docker compose -f docker-compose.yml -f docker-compose.dev.yml down
+docker compose down
 ```
 
-### 3. Backend
+O frontend ficará disponível em `http://localhost:3005`.
+
+### 3. Rodar backend fora do Docker (desenvolvimento)
 
 ```bash
+# Sobe só a infraestrutura (banco, Redis, Kafka)
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d postgres pgbouncer redis kafka
+
 cd backend
 npm install
 npx prisma migrate dev --schema=libs/database/prisma/schema.prisma
 
 # Em terminais separados:
-nest start api-gateway --watch
-nest start auth-service --watch
-nest start live-odds-service --watch
+npm run start:dev -- auth-service
+npm run start:dev -- api-gateway
+npm run start:dev -- betting-service
+npm run start:dev -- live-odds-service
 ```
 
-### 4. Frontend
-
-Build em dev:
+### 4. Rodar frontend fora do Docker (desenvolvimento)
 
 ```bash
 cd frontend
 npm install
-cp .env.local.example .env.local
-npm run dev
+npm run dev        # desenvolvimento — http://localhost:3005
 ```
 
-Build em prod:
+Para rodar em modo produção fora do Docker:
 
 ```bash
 cd frontend
-npm install
-cp .env.local.example .env.local
 npm run build
-npm run start
+npm run start      # http://localhost:3005
 ```
 
 ---
@@ -111,14 +126,18 @@ npm run start
 # Testes
 cd backend && npm run test
 
+# Logs de um serviço Docker
+docker compose logs frontend --follow
+docker compose logs api-gateway --follow
+
 # Verificar odds no Redis
 docker exec betazo_redis redis-cli -a <REDIS_PASSWORD> keys "odds:match:*"
 
 # Interface visual do banco
 cd backend && npx prisma studio --schema=libs/database/prisma/schema.prisma
 
-# Logs de um serviço Docker
-docker compose logs redis --follow
+# Rebuildar apenas o frontend após mudanças
+docker compose build frontend && docker compose up -d frontend
 ```
 
 ---
