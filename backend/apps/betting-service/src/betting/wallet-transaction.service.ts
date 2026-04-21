@@ -1,9 +1,10 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { Bet } from '@prisma/client';
 import { Decimal } from 'decimal.js';
 import { PrismaService } from '@betazo/database';
 import { BetPlacedPayload, KafkaProducerService, KAFKA_TOPICS } from '@betazo/kafka-client';
 import { RedisService } from '@betazo/redis-cache';
+import { ConfigService } from '../config/config.service';
 import { PlaceBetDto } from './dto/place-bet.dto';
 import { SelectionDto } from './dto/validate-ticket.dto';
 
@@ -35,11 +36,13 @@ export class WalletTransactionService {
     private readonly prisma: PrismaService,
     private readonly kafkaProducer: KafkaProducerService,
     private readonly redis: RedisService,
+    private readonly configService: ConfigService,
   ) {}
 
   async placeBet(dto: PlaceBetDto, userId: string): Promise<Bet> {
 
     await this.validateOddsBeforeTransaction(dto.selections);
+    await this.validateLimits(dto);
 
     const stake = new Decimal(dto.stake);
     const combinedOdds = dto.selections.reduce(
@@ -99,6 +102,32 @@ export class WalletTransactionService {
     await this.kafkaProducer.publish(KAFKA_TOPICS.BET_PLACED, payload);
 
     return bet;
+  }
+
+  private async validateLimits(dto: PlaceBetDto): Promise<void> {
+    const config = await this.configService.getHouseConfig();
+
+    const stake = new Decimal(dto.stake);
+    const minBet = new Decimal(config.minBetAmount);
+
+    if (stake.lessThan(minBet)) {
+      throw new UnprocessableEntityException(
+        `Aposta mínima é R$ ${config.minBetAmount.toFixed(2)}. Valor enviado: R$ ${stake.toFixed(2)}`,
+      );
+    }
+
+    const combinedOdds = dto.selections.reduce(
+      (acc, s) => acc.times(new Decimal(s.price)),
+      new Decimal(1),
+    );
+    const potentialPayout = stake.times(combinedOdds);
+    const maxPayout = new Decimal(config.maxPayoutPerTicket);
+
+    if (potentialPayout.greaterThan(maxPayout)) {
+      throw new UnprocessableEntityException(
+        `Ganho potencial de R$ ${potentialPayout.toDecimalPlaces(2).toNumber().toFixed(2)} excede o limite máximo por ticket de R$ ${config.maxPayoutPerTicket.toFixed(2)}`,
+      );
+    }
   }
 
   private async validateOddsBeforeTransaction(selections: SelectionDto[]): Promise<void> {
