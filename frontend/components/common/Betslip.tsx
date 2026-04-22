@@ -295,13 +295,18 @@ const Betslip = () => {
     setSharedStake(isNaN(parsed) || parsed < 0 ? 0 : parsed);
   }, [sharedStakeInput]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (selections.length === 0) {
+      setSingleStakes({});
+      setMultipleStakeInput('');
+      setSharedStakeInput('');
+      setSharedStake(0);
+    }
+  }, [selections.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
   function switchTab(tab: TabType) {
     if (tab === activeTab) return;
     clearBetslip();
-    setSingleStakes({});
-    setMultipleStakeInput('');
-    setSharedStakeInput('');
-    setSharedStake(0);
     setActiveTab(tab);
   }
 
@@ -331,7 +336,7 @@ const Betslip = () => {
           {selections.length > 0 && (
             <button
               type="button"
-              onClick={() => { clearBetslip(); setSingleStakes({}); setMultipleStakeInput(''); setSharedStakeInput(''); setSharedStake(0); }}
+              onClick={() => clearBetslip()}
               style={{
                 background: 'none',
                 border: '1px solid var(--button-one)',
