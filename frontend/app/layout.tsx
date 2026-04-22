@@ -19,8 +19,8 @@ import "slick-carousel/slick/slick.css";
 import "../styles/main.scss";
 
 export const metadata: Metadata = {
-  title: "Sports Betting React Nextjs Template",
-  description: "Sports Betting React Nextjs Template",
+  title: "Betazo",
+  description: "Betazo",
 };
 
 interface RootLayoutProps {
