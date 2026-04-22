@@ -1,3 +1,14 @@
+# Stage dev: next dev com hot reload (código montado via volume)
+FROM node:22-alpine AS dev
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --legacy-peer-deps
+ENV NODE_ENV=development
+ENV PORT=3005
+ENV HOSTNAME="0.0.0.0"
+EXPOSE 3005
+CMD ["npm", "run", "dev"]
+
 # Stage 1: Instala dependências
 FROM node:22-alpine AS deps
 WORKDIR /app
