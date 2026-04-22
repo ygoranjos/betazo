@@ -79,7 +79,8 @@ export function initMatchesSocket(): void {
   store._markInitialized();
 
   const GATEWAY_URL =
-    process.env.NEXT_PUBLIC_API_GATEWAY_URL ?? 'http://localhost:3001';
+    process.env.NEXT_PUBLIC_WS_URL ||
+    (typeof window !== 'undefined' ? window.location.origin : '');
 
   // Carregamento inicial via REST
   store._setLoading(true);
@@ -110,4 +111,8 @@ export function initMatchesSocket(): void {
   socket.on('odds_updated', (delta: OddsUpdatedPayload) => {
     useMatchesStore.getState()._applyOddsUpdate(delta);
   });
+
+  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+    (window as any).__matchesStore = useMatchesStore;
+  }
 }

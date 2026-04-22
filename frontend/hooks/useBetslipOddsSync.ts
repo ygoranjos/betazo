@@ -5,8 +5,11 @@ import { io, Socket } from 'socket.io-client';
 import { useBetslipStore } from '@/store';
 import type { OddsDelta } from './useLiveOdds';
 
+// Dev: NEXT_PUBLIC_WS_URL aponta direto pro api-gateway (sem nginx)
+// Prod: usa o origin atual que passa pelo nginx
 const GATEWAY_URL =
-  process.env.NEXT_PUBLIC_API_GATEWAY_URL ?? 'http://localhost:3001';
+  process.env.NEXT_PUBLIC_WS_URL ||
+  (typeof window !== 'undefined' ? window.location.origin : '');
 
 const ODD_TOLERANCE = 0.0001;
 

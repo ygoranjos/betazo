@@ -25,7 +25,8 @@ export interface UseLiveOddsReturn {
 }
 
 const GATEWAY_URL =
-  process.env.NEXT_PUBLIC_API_GATEWAY_URL ?? 'http://localhost:3001';
+  process.env.NEXT_PUBLIC_WS_URL ||
+  (typeof window !== 'undefined' ? window.location.origin : '');
 
 export function useLiveOdds(eventId: string): UseLiveOddsReturn {
   const [odds, setOdds] = useState<OddsState>({});
