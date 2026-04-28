@@ -55,10 +55,10 @@ const createResponseInterceptor = (instance: typeof authApi) => {
   return async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // Skip refresh retry for the refresh endpoint itself to avoid infinite loop
-    const isRefreshEndpoint = originalRequest?.url?.includes('/refresh');
+    // Skip refresh retry for auth endpoints to avoid infinite loops or spurious redirects
+    const isAuthEndpoint = originalRequest?.url?.match(/\/(refresh|login|register)$/);
 
-    if (error.response?.status === 401 && !originalRequest._retry && !isRefreshEndpoint) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
       const refreshed = await tryRefreshToken();

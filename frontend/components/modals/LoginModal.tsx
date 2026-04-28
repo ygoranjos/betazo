@@ -40,7 +40,7 @@ const LoginModal = () => {
   // Mutations
   const loginMutation = useLogin();
   const registerMutation = useRegister();
-  const { success } = useToastStore();
+  const success = useToastStore((state) => state.success);
 
   // Limpar erros e forms ao mudar de tab
   const handleTabChange = (tab: Tab) => {
@@ -49,20 +49,26 @@ const LoginModal = () => {
     resetSignup();
   };
 
+  const closeModal = () => {
+    const modalEl = document.getElementById("signInPin");
+    if (modalEl) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const bsModal = (window as any).bootstrap?.Modal?.getInstance(modalEl);
+      bsModal?.hide();
+    }
+  };
+
   // Handler de Login
   const handleLogin = async (data: { email: string; password: string }) => {
     try {
       await loginMutation.login({ email: data.email, password: data.password });
       success("Login realizado com sucesso!");
-
-      // Fechar modal após login bem-sucedido
       setTimeout(() => {
-        const closeButton = document.querySelector('[data-bs-dismiss="modal"]') as HTMLElement;
-        closeButton?.click();
+        closeModal();
         resetLogin();
       }, 500);
     } catch {
-      // Erro já é tratado pelo hook e toast store
+      // Erro já tratado pelo hook via toast — modal permanece aberto
     }
   };
 
@@ -75,20 +81,17 @@ const LoginModal = () => {
         password: data.password,
       });
       success("Registro realizado com sucesso!");
-
-      // Fechar modal após registro bem-sucedido
       setTimeout(() => {
-        const closeButton = document.querySelector('[data-bs-dismiss="modal"]') as HTMLElement;
-        closeButton?.click();
+        closeModal();
         resetSignup();
       }, 500);
     } catch {
-      // Erro já é tratado pelo hook e toast store
+      // Erro já tratado pelo hook via toast — modal permanece aberto
     }
   };
 
   return (
-    <div className="modal register__modal" id="signInPin" tabIndex={-1} aria-hidden="true">
+    <div className="modal register__modal" id="signInPin" tabIndex={-1} aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
       <div className="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
         <div className="modal-content">
           <div className="modal-header">

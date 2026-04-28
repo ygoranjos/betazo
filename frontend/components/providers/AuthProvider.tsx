@@ -22,7 +22,7 @@ interface AuthProviderProps {
  * the app knows the authentication status immediately.
  */
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { setHasHydrated } = useAuthStore();
+  const setHasHydrated = useAuthStore((state) => state.setHasHydrated);
 
   useEffect(() => {
     setHasHydrated(true);
