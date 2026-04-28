@@ -2,12 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import logo from "/public/img/logo/logo.png";
 import { useUIStore } from "@/store";
 import { useAuth, useBalance, useLogout } from "@/hooks";
 
 const DashboardHeader = () => {
   const { mobileMenuOpen, toggleMobileMenu, dashboardMenuOpen, toggleDashboardMenu } = useUIStore();
+  const pathname = usePathname();
+  const isDashboard = pathname?.startsWith("/dashboard");
   const { user } = useAuth();
   const balance = useBalance();
   const logout = useLogout();
@@ -99,11 +102,11 @@ const DashboardHeader = () => {
                   <div className="custom-dropdown__body">
                     <ul className="custom-dropdown__list">
                       <li>
-                        <Link href="/dashboard" className="custom-dropdown__body-link">
+                        <Link href={isDashboard ? "/" : "/dashboard"} className="custom-dropdown__body-link">
                           <span className="custom-dropdown__body-icon">
-                            <i className="fas fa-layer-group"></i>
+                            <i className={isDashboard ? "fas fa-home" : "fas fa-layer-group"}></i>
                           </span>
-                          <span className="custom-dropdown__body-text">Dashboard</span>
+                          <span className="custom-dropdown__body-text">{isDashboard ? "Home" : "Dashboard"}</span>
                         </Link>
                       </li>
                       <li>

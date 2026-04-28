@@ -21,7 +21,7 @@ const SignUpModal = () => {
   });
 
   const registerMutation = useRegister();
-  const { success } = useToastStore();
+  const success = useToastStore((state) => state.success);
 
   const handleRegister = async (data: RegisterFormData) => {
     try {
