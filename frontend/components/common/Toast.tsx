@@ -14,7 +14,7 @@ export function ToastContainer() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="toast-container position-fixed bottom-0 end-0 p-3" style={{ zIndex: 9999 }}>
+    <div className="toast-container position-fixed bottom-0 end-0 p-3" style={{ zIndex: 10000000 }}>
       {toasts.map((toast) => (
         <Toast key={toast.id} toast={toast} onRemove={() => removeToast(toast.id)} />
       ))}
