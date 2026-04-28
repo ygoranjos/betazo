@@ -3073,10 +3073,12 @@
         &:not(:last-child) {
           margin-bottom: 8px;
         }
-        a {
+        a,
+        button {
           display: flex;
           align-items: center;
           gap: 5px;
+          color: var(--white);
         }
       }
     }
