@@ -105,6 +105,8 @@ export interface AuthEndpoints {
 
 export interface WalletEndpoints {
   getBalance(): Promise<import('axios').AxiosResponse<any>>;
+  deposit(amount: number): Promise<import('axios').AxiosResponse<any>>;
+  getTransactions(): Promise<import('axios').AxiosResponse<any>>;
 }
 
 export interface LiveOddsEndpoints {
@@ -119,6 +121,8 @@ export const authEndpoints: AuthEndpoints = {
 
 export const walletEndpoints: WalletEndpoints = {
   getBalance: () => gatewayApi.get('/wallet/balance'),
+  deposit: (amount) => gatewayApi.post('/wallet/balance', { amount }),
+  getTransactions: () => gatewayApi.get('/wallet/transactions'),
 };
 
 export const matchesEndpoints = {

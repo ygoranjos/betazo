@@ -182,6 +182,70 @@ export function useBalance() {
   return balance;
 }
 
+// ==================== Transactions Hook ====================
+
+export interface Transaction {
+  id: string;
+  type: 'DEPOSIT' | 'WITHDRAWAL';
+  amount: string;
+  status: 'PENDING' | 'COMPLETED' | 'FAILED';
+  createdAt: string;
+}
+
+export function useTransactions() {
+  const isAuthenticated = useAuthStore(selectIsAuthenticated);
+
+  return useQuery<Transaction[]>({
+    queryKey: ['wallet', 'transactions'],
+    queryFn: async () => {
+      const response = await walletEndpoints.getTransactions();
+      return response.data as Transaction[];
+    },
+    enabled: isAuthenticated,
+    staleTime: 30_000,
+  });
+}
+
+// ==================== Deposit Hook ====================
+
+export interface DepositResponse {
+  id: string;
+  balance: string;
+  updatedAt: string;
+}
+
+export function useDeposit() {
+  const setBalance = useAuthStore((state) => state.setBalance);
+  const { success: toastSuccess, error: toastError } = useToastStore();
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation<DepositResponse, AxiosError<ApiError>, number>({
+    mutationFn: async (amount) => {
+      const response = await walletEndpoints.deposit(amount);
+      return response.data;
+    },
+    onSuccess: (data, amount) => {
+      const newBalance = parseFloat(data.balance);
+      setBalance(newBalance);
+      queryClient.invalidateQueries({ queryKey: ['wallet', 'balance'] });
+      queryClient.invalidateQueries({ queryKey: ['wallet', 'transactions'] });
+      toastSuccess(`Depósito de R$ ${amount.toFixed(2)} realizado com sucesso!`);
+    },
+    onError: (error) => {
+      const errorMessage =
+        error.response?.data?.message ||
+        'Erro ao realizar depósito. Tente novamente.';
+      toastError(errorMessage);
+    },
+  });
+
+  return {
+    deposit: mutation.mutateAsync,
+    isLoading: mutation.isPending,
+    isSuccess: mutation.isSuccess,
+  };
+}
+
 // ==================== Selectors ====================
 
 export const useCurrentUser = () => useAuthStore(selectUser);
