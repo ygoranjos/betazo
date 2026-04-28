@@ -130,7 +130,7 @@ const NavBar = () => {
                 <h6>{balance !== null ? `$${balance.toFixed(2)}` : "—"}</h6>
               </div>
               <div className="items d__cmn">
-                <Link href="#" className="cmn--btn">
+                <Link href="/dashboard/deposit" className="cmn--btn">
                   <span>Deposit</span>
                 </Link>
               </div>
