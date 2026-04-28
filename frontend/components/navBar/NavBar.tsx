@@ -37,7 +37,7 @@ const NavBar = () => {
 
   return (
     <header className={`header-section ${isAuthenticated && user ? "dashboard__header" : "py-1 py-lg-3"}`}>
-      <div className="container-fluid p-0">
+      <div className="container p-0">
         <div className="header-wrapper">
           <div className="menu__left__wrap">
             <div className="logo-menu px-2">
