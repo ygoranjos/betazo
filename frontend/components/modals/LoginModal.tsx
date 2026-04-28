@@ -52,8 +52,7 @@ const LoginModal = () => {
   const closeModal = () => {
     const modalEl = document.getElementById("signInPin");
     if (modalEl) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const bsModal = (window as any).bootstrap?.Modal?.getInstance(modalEl);
+      const bsModal = (window as Window & typeof globalThis & { bootstrap?: { Modal?: { getOrCreateInstance: (el: HTMLElement) => { hide: () => void } } } }).bootstrap?.Modal?.getOrCreateInstance(modalEl);
       bsModal?.hide();
     }
   };
@@ -66,6 +65,7 @@ const LoginModal = () => {
       setTimeout(() => {
         closeModal();
         resetLogin();
+        window.location.reload();
       }, 500);
     } catch {
       // Erro já tratado pelo hook via toast — modal permanece aberto
