@@ -5,6 +5,8 @@ export {
   useRegister,
   useLogout,
   useBalance,
+  useDeposit,
+  useTransactions,
   useCurrentUser,
   useIsAuthenticated,
   useAuthLoading,

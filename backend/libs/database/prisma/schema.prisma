@@ -9,25 +9,27 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  username     String   @unique
-  passwordHash String   @map("password_hash")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id           String        @id @default(uuid())
+  email        String        @unique
+  username     String        @unique
+  passwordHash String        @map("password_hash")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
   wallet       Wallet?
   bets         Bet[]
+  transactions Transaction[]
 
   @@map("users")
 }
 
 model Wallet {
-  id        String   @id @default(uuid())
-  balance   Decimal  @default(0) @db.Decimal(18, 2)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  userId    String   @unique @map("user_id")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String        @id @default(uuid())
+  balance      Decimal       @default(0) @db.Decimal(18, 2)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  userId       String        @unique @map("user_id")
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
 
   @@map("wallets")
 }
@@ -62,4 +64,29 @@ model Bet {
   user            User      @relation(fields: [userId], references: [id])
 
   @@map("bets")
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model Transaction {
+  id        String            @id @default(uuid())
+  userId    String            @map("user_id")
+  walletId  String            @map("wallet_id")
+  type      TransactionType
+  amount    Decimal           @db.Decimal(18, 2)
+  status    TransactionStatus @default(COMPLETED)
+  createdAt DateTime          @default(now()) @map("created_at")
+  user      User              @relation(fields: [userId], references: [id])
+  wallet    Wallet            @relation(fields: [walletId], references: [id])
+
+  @@map("transactions")
 }

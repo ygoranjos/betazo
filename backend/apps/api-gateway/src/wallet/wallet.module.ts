@@ -14,3 +14,4 @@ import { WalletService } from './wallet.service';
   providers: [WalletService, JwtAuthGuard],
 })
 export class WalletModule {}
+
